@@ -30,6 +30,7 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
       name: name.trim(),
       provider: provider.trim(),
       riskType,
+      beneficiary: beneficiary.trim(),
       coverageAmount,
       monthlyPremium,
       endYear,
