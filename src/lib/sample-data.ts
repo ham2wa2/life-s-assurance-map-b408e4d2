@@ -32,6 +32,7 @@ export const sampleContracts: Contract[] = [
     name: 'Unfallversicherung (Todesfallleistung)',
     provider: 'AXA',
     riskType: 'tod',
+    beneficiary: 'Anna Müller',
     coverageAmount: 30000,
     monthlyPremium: 8,
     endYear: 2050,
