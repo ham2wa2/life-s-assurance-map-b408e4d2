@@ -61,8 +61,10 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const handleComplete = () => {
-    const persons = [{ name: mainName.trim(), age: mainAge, role: 'hauptverdiener' as const, netIncome: mainIncome }];
-    if (hasPartner) persons.push({ name: partnerName.trim(), age: partnerAge, role: 'partner' as const, netIncome: partnerIncome });
+    const persons: HouseholdData['persons'] = [
+      { name: mainName.trim(), age: mainAge, role: 'hauptverdiener', netIncome: mainIncome },
+    ];
+    if (hasPartner) persons.push({ name: partnerName.trim(), age: partnerAge, role: 'partner', netIncome: partnerIncome });
 
     const household: HouseholdData = {
       persons,
