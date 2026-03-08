@@ -54,6 +54,7 @@ export const sampleContracts: Contract[] = [
     name: 'Unfallversicherung',
     provider: 'AXA',
     riskType: 'unfall',
+    beneficiary: 'Thomas Müller',
     coverageAmount: 50000,
     monthlyPremium: 12,
     endYear: 2050,
