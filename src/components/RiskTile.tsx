@@ -26,7 +26,7 @@ const statusDotColors = {
   success: 'bg-success',
 };
 
-export function RiskTile({ riskType, onOpenTimeline }: RiskTileProps) {
+export function RiskTile({ riskType, onOpenTimeline, onEditContract }: RiskTileProps) {
   const { contracts, timeline, toggleContract } = useInsurance();
   const riskContracts = contracts.filter(c => c.riskType === riskType);
   
