@@ -16,6 +16,7 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
 
   const [provider, setProvider] = useState(contract?.provider ?? '');
   const [name, setName] = useState(contract?.name ?? '');
+  const [beneficiary, setBeneficiary] = useState(contract?.beneficiary ?? '');
   const [riskType, setRiskType] = useState<RiskType>(contract?.riskType ?? 'tod');
   const [coverageAmount, setCoverageAmount] = useState(contract?.coverageAmount ?? 100000);
   const [monthlyPremium, setMonthlyPremium] = useState(contract?.monthlyPremium ?? 25);
@@ -29,6 +30,7 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
       name: name.trim(),
       provider: provider.trim(),
       riskType,
+      beneficiary: beneficiary.trim(),
       coverageAmount,
       monthlyPremium,
       endYear,
@@ -67,6 +69,11 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
               <Label className="text-xs text-muted-foreground">Bezeichnung</Label>
               <Input placeholder="z.B. Risiko-LV" value={name} onChange={e => setName(e.target.value)} maxLength={100} />
             </div>
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground">Begünstigter</Label>
+            <Input placeholder="z.B. Max Mustermann" value={beneficiary} onChange={e => setBeneficiary(e.target.value)} maxLength={100} />
           </div>
 
           <div>

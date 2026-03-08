@@ -18,6 +18,7 @@ export interface Contract {
   name: string;
   provider: string;
   riskType: RiskType;
+  beneficiary: string;
   coverageAmount: number;
   monthlyPremium: number;
   endYear: number;

@@ -36,7 +36,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [contracts, setContracts] = useState<Omit<Contract, 'id'>[]>([]);
   const [newContract, setNewContract] = useState({
     name: '', provider: '', riskType: 'tod' as Contract['riskType'],
-    coverageAmount: 100000, monthlyPremium: 25, endYear: 2045,
+    beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045,
   });
 
   const addChild = () => setChildren([...children, { name: '', age: 0 }]);
@@ -48,7 +48,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const addContract = () => {
     if (!newContract.name.trim() || !newContract.provider.trim()) return;
     setContracts([...contracts, { ...newContract, active: true }]);
-    setNewContract({ name: '', provider: '', riskType: 'tod', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045 });
+    setNewContract({ name: '', provider: '', riskType: 'tod', beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045 });
   };
 
   const removeContract = (i: number) => setContracts(contracts.filter((_, idx) => idx !== i));
@@ -259,6 +259,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <div className="grid grid-cols-2 gap-3">
                   <Input placeholder="Anbieter (z.B. Allianz)" value={newContract.provider} onChange={e => setNewContract({ ...newContract, provider: e.target.value })} maxLength={50} />
                   <Input placeholder="Bezeichnung" value={newContract.name} onChange={e => setNewContract({ ...newContract, name: e.target.value })} maxLength={100} />
+                </div>
+                <div>
+                  <Input placeholder="Begünstigter (z.B. Max Mustermann)" value={newContract.beneficiary} onChange={e => setNewContract({ ...newContract, beneficiary: e.target.value })} maxLength={100} />
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
