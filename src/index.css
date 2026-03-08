@@ -105,3 +105,14 @@
     font-family: var(--font-mono);
   }
 }
+
+@media print {
+  .print\\:hidden, .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
