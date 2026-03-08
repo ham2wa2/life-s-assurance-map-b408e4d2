@@ -16,6 +16,7 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
 
   const [provider, setProvider] = useState(contract?.provider ?? '');
   const [name, setName] = useState(contract?.name ?? '');
+  const [beneficiary, setBeneficiary] = useState(contract?.beneficiary ?? '');
   const [riskType, setRiskType] = useState<RiskType>(contract?.riskType ?? 'tod');
   const [coverageAmount, setCoverageAmount] = useState(contract?.coverageAmount ?? 100000);
   const [monthlyPremium, setMonthlyPremium] = useState(contract?.monthlyPremium ?? 25);
