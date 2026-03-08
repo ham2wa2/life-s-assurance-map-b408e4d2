@@ -260,6 +260,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   <Input placeholder="Anbieter (z.B. Allianz)" value={newContract.provider} onChange={e => setNewContract({ ...newContract, provider: e.target.value })} maxLength={50} />
                   <Input placeholder="Bezeichnung" value={newContract.name} onChange={e => setNewContract({ ...newContract, name: e.target.value })} maxLength={100} />
                 </div>
+                <div>
+                  <Input placeholder="Begünstigter (z.B. Max Mustermann)" value={newContract.beneficiary} onChange={e => setNewContract({ ...newContract, beneficiary: e.target.value })} maxLength={100} />
+                </div>
 
                 <div className="flex gap-2 flex-wrap">
                   {(['tod', 'bu', 'unfall', 'sachwerte'] as const).map(rt => (

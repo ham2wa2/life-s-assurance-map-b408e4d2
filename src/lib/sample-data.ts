@@ -43,6 +43,7 @@ export const sampleContracts: Contract[] = [
     name: 'BU-Versicherung',
     provider: 'Allianz',
     riskType: 'bu',
+    beneficiary: 'Thomas Müller',
     coverageAmount: 72000,
     monthlyPremium: 85,
     endYear: 2048,
