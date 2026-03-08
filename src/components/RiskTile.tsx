@@ -80,6 +80,7 @@ export function RiskTile({ riskType, onOpenTimeline, onEditContract }: RiskTileP
               </p>
               <p className="text-xs text-muted-foreground font-mono">
                 {(contract.coverageAmount / 1000).toFixed(0)}k€ · {contract.monthlyPremium}€/mtl
+                {contract.beneficiary && <span className="ml-1 text-muted-foreground/70">· {contract.beneficiary}</span>}
               </p>
             </div>
             <Switch

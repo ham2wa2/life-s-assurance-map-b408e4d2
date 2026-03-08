@@ -72,6 +72,11 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
           </div>
 
           <div>
+            <Label className="text-xs text-muted-foreground">Begünstigter</Label>
+            <Input placeholder="z.B. Max Mustermann" value={beneficiary} onChange={e => setBeneficiary(e.target.value)} maxLength={100} />
+          </div>
+
+          <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Risikotyp</Label>
             <div className="flex gap-2 flex-wrap">
               {(['tod', 'bu', 'unfall', 'sachwerte'] as const).map(rt => (
