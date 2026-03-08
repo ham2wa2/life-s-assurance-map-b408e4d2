@@ -36,7 +36,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [contracts, setContracts] = useState<Omit<Contract, 'id'>[]>([]);
   const [newContract, setNewContract] = useState({
     name: '', provider: '', riskType: 'tod' as Contract['riskType'],
-    coverageAmount: 100000, monthlyPremium: 25, endYear: 2045,
+    beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045,
   });
 
   const addChild = () => setChildren([...children, { name: '', age: 0 }]);
