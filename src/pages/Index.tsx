@@ -125,13 +125,17 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
 const Index = () => {
   const [setup, setSetup] = useState<{ household: HouseholdData; contracts: Contract[] } | null>(null);
 
+  const handleImport = (h: HouseholdData, c: Contract[]) => {
+    setSetup({ household: h, contracts: c });
+  };
+
   if (!setup) {
     return <OnboardingWizard onComplete={(h, c) => setSetup({ household: h, contracts: c })} />;
   }
 
   return (
-    <InsuranceProvider initialHousehold={setup.household} initialContracts={setup.contracts}>
-      <DashboardContent />
+    <InsuranceProvider key={JSON.stringify(setup)} initialHousehold={setup.household} initialContracts={setup.contracts}>
+      <DashboardContent onImport={handleImport} />
     </InsuranceProvider>
   );
 };
