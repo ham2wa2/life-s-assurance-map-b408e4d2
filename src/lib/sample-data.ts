@@ -21,6 +21,7 @@ export const sampleContracts: Contract[] = [
     name: 'Risiko-Lebensversicherung',
     provider: 'Allianz',
     riskType: 'tod',
+    beneficiary: 'Anna Müller',
     coverageAmount: 200000,
     monthlyPremium: 25,
     endYear: 2045,
