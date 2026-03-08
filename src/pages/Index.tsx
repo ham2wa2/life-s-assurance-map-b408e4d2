@@ -9,12 +9,13 @@ import { RiskType, HouseholdData, Contract } from '@/lib/insurance-types';
 import { exportToJSON, exportToPDF, importFromJSON } from '@/lib/import-export';
 import { toast } from '@/hooks/use-toast';
 
-function DashboardContent() {
+function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contract[]) => void }) {
   const [view, setView] = useState<'dashboard' | 'timeline'>('dashboard');
   const [timelineRisk, setTimelineRisk] = useState<RiskType>('tod');
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
   const { household, contracts } = useInsurance();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openTimeline = (risk: RiskType) => {
     setTimelineRisk(risk);
@@ -24,6 +25,19 @@ function DashboardContent() {
   const handleEditContract = (contract: Contract) => {
     setEditingContract(contract);
     setShowContractDialog(true);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await importFromJSON(file);
+      onImport(data.household, data.contracts);
+      toast({ title: 'Import erfolgreich', description: `${data.contracts.length} Verträge importiert.` });
+    } catch (err: any) {
+      toast({ title: 'Import fehlgeschlagen', description: err.message, variant: 'destructive' });
+    }
+    e.target.value = '';
   };
 
   if (view === 'timeline') {
@@ -46,12 +60,42 @@ function DashboardContent() {
               {household.persons.map(p => p.name).join(' & ')} · {household.children.length} Kinder · {household.mortgageAmount > 0 ? `Kredit bis ${household.mortgageEndYear}` : 'Kein Kredit'}
             </p>
           </div>
-          <button
-            onClick={() => { setEditingContract(undefined); setShowContractDialog(true); }}
-            className="px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            + Vertrag
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImport}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-accent/10 transition-colors print:hidden"
+              title="JSON importieren"
+            >
+              📥 Import
+            </button>
+            <button
+              onClick={() => exportToJSON(household, contracts)}
+              className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-accent/10 transition-colors print:hidden"
+              title="JSON exportieren"
+            >
+              📤 Export
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-accent/10 transition-colors print:hidden"
+              title="Als PDF drucken"
+            >
+              🖨️ PDF
+            </button>
+            <button
+              onClick={() => { setEditingContract(undefined); setShowContractDialog(true); }}
+              className="px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity print:hidden"
+            >
+              + Vertrag
+            </button>
+          </div>
         </div>
 
         <SummaryBar />
