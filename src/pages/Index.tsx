@@ -1,21 +1,39 @@
-import { useState, useRef } from 'react';
-import { InsuranceProvider, useInsurance } from '@/hooks/useInsurance';
+/**
+ * Index Page — App Shell (Sprint 1)
+ * 
+ * State: Zustand store (no more local useState for setup)
+ * Routing: tab-based via store.activeTab (no react-router within app)
+ * 
+ * If onboardingComplete === false → OnboardingWizard
+ * If onboardingComplete === true  → Main app (currently Absicherung tab)
+ */
+
+import { useRef } from 'react';
+import { useFinanzplanStore } from '@/store/finanzplanStore';
+import { useInsurance } from '@/hooks/useInsurance';
 import { RiskTile } from '@/components/RiskTile';
 import { TimelineView } from '@/components/TimelineView';
 import { SummaryBar } from '@/components/SummaryBar';
 import { ContractDialog } from '@/components/ContractDialog';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { RiskType, HouseholdData, Contract } from '@/lib/insurance-types';
-import { exportToJSON, exportToPDF, importFromJSON } from '@/lib/import-export';
 import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { importFromJSON } from '@/lib/import-export';
 
-function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contract[]) => void }) {
+// ============================================================
+// DASHBOARD / ABSICHERUNG VIEW
+// ============================================================
+
+function AbsicherungView() {
   const [view, setView] = useState<'dashboard' | 'timeline'>('dashboard');
   const [timelineRisk, setTimelineRisk] = useState<RiskType>('tod');
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
-  const { household, contracts } = useInsurance();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { household, contracts, setHousehold, setContracts } = useInsurance();
+  const { exportData, importData } = useFinanzplanStore.getState();
 
   const openTimeline = (risk: RiskType) => {
     setTimelineRisk(risk);
@@ -32,12 +50,32 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
     if (!file) return;
     try {
       const data = await importFromJSON(file);
-      onImport(data.household, data.contracts);
-      toast({ title: 'Import erfolgreich', description: `${data.contracts.length} Verträge importiert.` });
-    } catch (err: any) {
-      toast({ title: 'Import fehlgeschlagen', description: err.message, variant: 'destructive' });
+      setHousehold(data.household);
+      setContracts(data.contracts);
+      toast({
+        title: 'Import erfolgreich',
+        description: `${data.contracts.length} Verträge importiert.`,
+      });
+    } catch (err: unknown) {
+      toast({
+        title: 'Import fehlgeschlagen',
+        description: err instanceof Error ? err.message : 'Unbekannter Fehler',
+        variant: 'destructive',
+      });
     }
     e.target.value = '';
+  };
+
+  const handleExport = () => {
+    const data = exportData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finanzplan-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (view === 'timeline') {
@@ -57,7 +95,11 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
               Zeitachse Absicherung
             </h1>
             <p className="text-muted-foreground">
-              {household.persons.map(p => p.name).join(' & ')} · {household.children.length} Kinder · {household.mortgageAmount > 0 ? `Kredit bis ${household.mortgageEndYear}` : 'Kein Kredit'}
+              {household.persons.map((p) => p.name).join(' & ')} ·{' '}
+              {household.children.length} Kinder ·{' '}
+              {household.mortgageAmount > 0
+                ? `Kredit bis ${household.mortgageEndYear}`
+                : 'Kein Kredit'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -76,21 +118,17 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
               📥 Import
             </button>
             <button
-              onClick={() => exportToJSON(household, contracts)}
+              onClick={handleExport}
               className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-accent/10 transition-colors print:hidden"
               title="JSON exportieren"
             >
               📤 Export
             </button>
             <button
-              onClick={exportToPDF}
-              className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-accent/10 transition-colors print:hidden"
-              title="Als PDF drucken"
-            >
-              🖨️ PDF
-            </button>
-            <button
-              onClick={() => { setEditingContract(undefined); setShowContractDialog(true); }}
+              onClick={() => {
+                setEditingContract(undefined);
+                setShowContractDialog(true);
+              }}
               className="px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity print:hidden"
             >
               + Vertrag
@@ -101,7 +139,7 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
         <SummaryBar />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(['tod', 'bu', 'unfall', 'sachwerte'] as RiskType[]).map(risk => (
+          {(['tod', 'bu', 'unfall', 'sachwerte'] as RiskType[]).map((risk) => (
             <RiskTile
               key={risk}
               riskType={risk}
@@ -122,22 +160,55 @@ function DashboardContent({ onImport }: { onImport: (h: HouseholdData, c: Contra
   );
 }
 
+// ============================================================
+// ROOT INDEX
+// ============================================================
+
 const Index = () => {
-  const [setup, setSetup] = useState<{ household: HouseholdData; contracts: Contract[] } | null>(null);
+  const onboardingComplete = useFinanzplanStore((s) => s.onboardingComplete);
+  const { setPersons, setContracts, setHouseholdConfig, completeOnboarding } =
+    useFinanzplanStore.getState();
 
-  const handleImport = (h: HouseholdData, c: Contract[]) => {
-    setSetup({ household: h, contracts: c });
-  };
+  if (!onboardingComplete) {
+    return (
+      <OnboardingWizard
+        onComplete={(household: HouseholdData, contracts: Contract[]) => {
+          const currentYear = new Date().getFullYear();
 
-  if (!setup) {
-    return <OnboardingWizard onComplete={(h, c) => setSetup({ household: h, contracts: c })} />;
+          // Convert HouseholdData → store types
+          const persons = [
+            ...household.persons.map((p) => ({
+              id: crypto.randomUUID(),
+              role: p.role as 'hauptverdiener' | 'partner',
+              name: p.name,
+              birthYear: currentYear - p.age,
+              netIncomeMonthly: p.netIncome,
+              retirementAge: household.retirementAge,
+            })),
+            ...household.children.map((k) => ({
+              id: crypto.randomUUID(),
+              role: 'kind' as const,
+              name: k.name,
+              birthYear: currentYear - k.age,
+              netIncomeMonthly: 0,
+              retirementAge: 67,
+            })),
+          ];
+
+          setPersons(persons);
+          setContracts(contracts);
+          setHouseholdConfig({
+            mortgageAmount: household.mortgageAmount,
+            mortgageEndYear: household.mortgageEndYear,
+            studyCostPerYear: household.studyCostPerYear,
+          });
+          completeOnboarding();
+        }}
+      />
+    );
   }
 
-  return (
-    <InsuranceProvider key={JSON.stringify(setup)} initialHousehold={setup.household} initialContracts={setup.contracts}>
-      <DashboardContent onImport={handleImport} />
-    </InsuranceProvider>
-  );
+  return <AbsicherungView />;
 };
 
 export default Index;
