@@ -1,23 +1,32 @@
 import { useState, useMemo, createContext, useContext, ReactNode } from 'react';
 import { HouseholdData, Contract, YearlyNeed, AdjustmentSuggestion } from '@/lib/insurance-types';
 import { calculateTimeline, generateSuggestions } from '@/lib/insurance-calculator';
-import { sampleHousehold, sampleContracts } from '@/lib/sample-data';
 
 interface InsuranceContextType {
   household: HouseholdData;
   contracts: Contract[];
   timeline: YearlyNeed[];
   suggestions: AdjustmentSuggestion[];
+  setHousehold: (data: HouseholdData) => void;
   setContracts: (contracts: Contract[]) => void;
   toggleContract: (id: string) => void;
   updateContractAmount: (id: string, amount: number) => void;
+  addContract: (data: Omit<Contract, 'id'>) => void;
+  editContract: (id: string, data: Omit<Contract, 'id'>) => void;
+  deleteContract: (id: string) => void;
 }
 
 const InsuranceContext = createContext<InsuranceContextType | null>(null);
 
-export function InsuranceProvider({ children }: { children: ReactNode }) {
-  const [household] = useState<HouseholdData>(sampleHousehold);
-  const [contracts, setContracts] = useState<Contract[]>(sampleContracts);
+interface InsuranceProviderProps {
+  children: ReactNode;
+  initialHousehold: HouseholdData;
+  initialContracts: Contract[];
+}
+
+export function InsuranceProvider({ children, initialHousehold, initialContracts }: InsuranceProviderProps) {
+  const [household, setHousehold] = useState<HouseholdData>(initialHousehold);
+  const [contracts, setContracts] = useState<Contract[]>(initialContracts);
 
   const timeline = useMemo(() => calculateTimeline(household, contracts), [household, contracts]);
   const suggestions = useMemo(() => generateSuggestions(household, contracts, timeline), [household, contracts, timeline]);
@@ -34,10 +43,24 @@ export function InsuranceProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const addContract = (data: Omit<Contract, 'id'>) => {
+    const newContract: Contract = { ...data, id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    setContracts(prev => [...prev, newContract]);
+  };
+
+  const editContract = (id: string, data: Omit<Contract, 'id'>) => {
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  };
+
+  const deleteContract = (id: string) => {
+    setContracts(prev => prev.filter(c => c.id !== id));
+  };
+
   return (
     <InsuranceContext.Provider value={{
       household, contracts, timeline, suggestions,
-      setContracts, toggleContract, updateContractAmount,
+      setHousehold, setContracts, toggleContract, updateContractAmount,
+      addContract, editContract, deleteContract,
     }}>
       {children}
     </InsuranceContext.Provider>
