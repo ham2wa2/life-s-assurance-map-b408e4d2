@@ -69,7 +69,11 @@ export function RiskTile({ riskType, onOpenTimeline, onEditContract }: RiskTileP
       {/* Contracts */}
       <div className="space-y-2 mb-4">
         {riskContracts.map(contract => (
-          <div key={contract.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/50">
+          <div
+            key={contract.id}
+            className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/80 transition-colors"
+            onClick={() => onEditContract?.(contract)}
+          >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-card-foreground truncate">
                 {contract.provider} {contract.name.length > 20 ? contract.name.substring(0, 20) + '…' : contract.name}
@@ -80,7 +84,8 @@ export function RiskTile({ riskType, onOpenTimeline, onEditContract }: RiskTileP
             </div>
             <Switch
               checked={contract.active}
-              onCheckedChange={() => toggleContract(contract.id)}
+              onCheckedChange={(e) => { e; toggleContract(contract.id); }}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         ))}
