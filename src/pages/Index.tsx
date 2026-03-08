@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { InsuranceProvider, useInsurance } from '@/hooks/useInsurance';
 import { RiskTile } from '@/components/RiskTile';
 import { TimelineView } from '@/components/TimelineView';
@@ -6,6 +6,8 @@ import { SummaryBar } from '@/components/SummaryBar';
 import { ContractDialog } from '@/components/ContractDialog';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { RiskType, HouseholdData, Contract } from '@/lib/insurance-types';
+import { exportToJSON, exportToPDF, importFromJSON } from '@/lib/import-export';
+import { toast } from '@/hooks/use-toast';
 
 function DashboardContent() {
   const [view, setView] = useState<'dashboard' | 'timeline'>('dashboard');
