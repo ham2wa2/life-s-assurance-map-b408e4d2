@@ -1,10 +1,11 @@
 import { useInsurance } from '@/hooks/useInsurance';
-import { RiskType, RISK_LABELS, RISK_ICONS } from '@/lib/insurance-types';
+import { RiskType, Contract, RISK_LABELS, RISK_ICONS } from '@/lib/insurance-types';
 import { Switch } from '@/components/ui/switch';
 
 interface RiskTileProps {
   riskType: RiskType;
   onOpenTimeline: () => void;
+  onEditContract?: (contract: Contract) => void;
 }
 
 function getOverallStatus(riskType: RiskType, timeline: ReturnType<typeof useInsurance>['timeline']) {
