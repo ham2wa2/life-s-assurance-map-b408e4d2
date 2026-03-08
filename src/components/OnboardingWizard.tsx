@@ -48,7 +48,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const addContract = () => {
     if (!newContract.name.trim() || !newContract.provider.trim()) return;
     setContracts([...contracts, { ...newContract, active: true }]);
-    setNewContract({ name: '', provider: '', riskType: 'tod', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045 });
+    setNewContract({ name: '', provider: '', riskType: 'tod', beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045 });
   };
 
   const removeContract = (i: number) => setContracts(contracts.filter((_, idx) => idx !== i));
