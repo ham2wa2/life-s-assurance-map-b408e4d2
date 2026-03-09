@@ -2,17 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import type { Plugin } from "vite";
-
-/** Remove crossorigin attributes so the built app works over file:// */
-function removeCrossorigin(): Plugin {
-  return {
-    name: "remove-crossorigin",
-    transformIndexHtml(html) {
-      return html.replace(/ crossorigin/g, "");
-    },
-  };
-}
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -24,7 +14,12 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger(), removeCrossorigin()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    // Inline all JS/CSS into index.html → single self-contained file, works over file://
+    viteSingleFile(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
