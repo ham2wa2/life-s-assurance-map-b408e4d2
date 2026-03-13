@@ -6,7 +6,7 @@
 import { useRef } from 'react';
 import { useFinanzplanStore } from '@/store/finanzplanStore';
 import { ActiveTab } from '@/lib/types';
-import { importFromJSON } from '@/lib/import-export';
+import { parseFinanzplanExport } from '@/lib/schemas';
 import { toast } from '@/hooks/use-toast';
 
 const TABS: { id: ActiveTab; label: string }[] = [
@@ -27,7 +27,7 @@ export function AppShell({ children }: AppShellProps) {
   const activeTab = useFinanzplanStore((s) => s.activeTab);
   const setActiveTab = useFinanzplanStore((s) => s.setActiveTab);
   const persons = useFinanzplanStore((s) => s.persons);
-  const { exportData, importData, setPersons, setContracts, setHouseholdConfig, resetStore } =
+  const { exportJSON, importData, setPersons, setContracts, setHouseholdConfig, resetStore } =
     useFinanzplanStore.getState();
 
   const handleReset = () => {
@@ -43,7 +43,7 @@ export function AppShell({ children }: AppShellProps) {
     .join(' & ');
 
   const handleExport = () => {
-    const data = exportData();
+    const data = exportJSON();
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -58,15 +58,45 @@ export function AppShell({ children }: AppShellProps) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const data = await importFromJSON(file);
-      // Try new format first
-      if ('persons' in data && 'contracts' in data) {
-        importData(data as Parameters<typeof importData>[0]);
-        toast({ title: 'Import erfolgreich', description: 'Daten wurden geladen.' });
+      const text = await file.text();
+
+      // First attempt: validate as new finanzplan-v2/v3 format via Zod
+      let parsed: ReturnType<typeof parseFinanzplanExport> | null = null;
+      try {
+        parsed = parseFinanzplanExport(text);
+      } catch {
+        // not new format — try legacy below
+      }
+
+      if (parsed) {
+        importData(parsed);
+        toast({
+          title: 'Import erfolgreich',
+          description: `${parsed.persons.length} Personen, ${parsed.contracts.length} Verträge geladen.`,
+        });
       } else {
-        // Legacy format
+        // Legacy format (old insurance-types.ts export)
+        let raw: unknown;
+        try {
+          raw = JSON.parse(text);
+        } catch {
+          throw new Error('Ungültiges JSON-Format — die Datei kann nicht gelesen werden.');
+        }
+        const legacyData = raw as {
+          household: {
+            persons: { role: string; name: string; age: number; netIncome: number }[];
+            children: { name: string; age: number }[];
+            mortgageAmount: number;
+            mortgageEndYear: number;
+            studyCostPerYear: number;
+            retirementAge: number;
+          };
+          contracts: Parameters<typeof setContracts>[0];
+        };
+        if (!legacyData?.household?.persons || !Array.isArray(legacyData.household.persons)) {
+          throw new Error('Unbekanntes Dateiformat — weder Finanzplan-Export noch Legacy-Format.');
+        }
         const currentYear = new Date().getFullYear();
-        const legacyData = data as { household: { persons: { role: string; name: string; age: number; netIncome: number }[]; children: { name: string; age: number }[]; mortgageAmount: number; mortgageEndYear: number; studyCostPerYear: number; retirementAge: number }; contracts: Parameters<typeof setContracts>[0] };
         const newPersons = [
           ...legacyData.household.persons.map((p) => ({
             id: crypto.randomUUID(),
@@ -92,10 +122,17 @@ export function AppShell({ children }: AppShellProps) {
           mortgageEndYear: legacyData.household.mortgageEndYear,
           studyCostPerYear: legacyData.household.studyCostPerYear,
         });
-        toast({ title: 'Import erfolgreich (Legacy)', description: `${legacyData.contracts.length} Verträge importiert.` });
+        toast({
+          title: 'Import erfolgreich (Legacy)',
+          description: `${legacyData.contracts.length} Verträge importiert.`,
+        });
       }
     } catch (err) {
-      toast({ title: 'Import fehlgeschlagen', description: err instanceof Error ? err.message : 'Fehler', variant: 'destructive' });
+      toast({
+        title: 'Import fehlgeschlagen',
+        description: err instanceof Error ? err.message : 'Unbekannter Fehler',
+        variant: 'destructive',
+      });
     }
     e.target.value = '';
   };

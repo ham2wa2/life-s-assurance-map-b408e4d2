@@ -95,6 +95,9 @@ interface FinanzplanActions {
   deleteLiability: (id: string) => void;
 
   // --- Household Config ---
+  /** Preferred name per api-spec.md */
+  setHousehold: (updates: Partial<HouseholdConfig>) => void;
+  /** @deprecated Use setHousehold instead */
   setHouseholdConfig: (updates: Partial<HouseholdConfig>) => void;
 
   // --- Scenarios ---
@@ -104,6 +107,9 @@ interface FinanzplanActions {
   copyScenario: (id: string) => void;
 
   // --- Import / Export ---
+  /** Preferred name per api-spec.md */
+  exportJSON: () => FinanzplanExport;
+  /** @deprecated Use exportJSON instead */
   exportData: () => FinanzplanExport;
   importData: (data: FinanzplanExport) => void;
 }
@@ -240,6 +246,11 @@ export const useFinanzplanStore = create<FinanzplanStore>()(
 
       // --- Household Config ---
 
+      setHousehold: (updates) =>
+        set((state) => ({
+          household: { ...state.household, ...updates },
+        })),
+
       setHouseholdConfig: (updates) =>
         set((state) => ({
           household: { ...state.household, ...updates },
@@ -289,7 +300,7 @@ export const useFinanzplanStore = create<FinanzplanStore>()(
 
       // --- Import / Export ---
 
-      exportData: () => {
+      exportJSON: () => {
         const state = get();
         return {
           version: 1 as const,
@@ -302,6 +313,8 @@ export const useFinanzplanStore = create<FinanzplanStore>()(
           scenarios: state.scenarios,
         };
       },
+
+      exportData: () => get().exportJSON(),
 
       importData: (data) => {
         set({

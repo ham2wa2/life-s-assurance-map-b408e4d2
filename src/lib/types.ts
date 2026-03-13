@@ -235,8 +235,13 @@ export interface YearlyNeed {
 export interface ProjectionYear {
   year: number;
   income: number;
+  /** Base living costs + liability repayments + child study costs (inflation-adjusted) */
   expenses: number;
+  /** Active insurance premiums — separated from expenses for clearer cashflow analysis */
+  premiums: number;
   netCashflow: number;
+  /** Investment return on existing net worth (positive balance only) */
+  investReturn: number;
   netWorth: number;
   lifePhase: LifePhase;
 }
