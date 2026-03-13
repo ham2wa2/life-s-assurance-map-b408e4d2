@@ -27,8 +27,14 @@ export function AppShell({ children }: AppShellProps) {
   const activeTab = useFinanzplanStore((s) => s.activeTab);
   const setActiveTab = useFinanzplanStore((s) => s.setActiveTab);
   const persons = useFinanzplanStore((s) => s.persons);
-  const { exportData, importData, setPersons, setContracts, setHouseholdConfig } =
+  const { exportData, importData, setPersons, setContracts, setHouseholdConfig, resetStore } =
     useFinanzplanStore.getState();
+
+  const handleReset = () => {
+    if (window.confirm('Alle Daten löschen und von vorne beginnen?')) {
+      resetStore();
+    }
+  };
 
   const subtitle = persons
     .filter((p) => p.role !== 'kind')
@@ -117,6 +123,13 @@ export function AppShell({ children }: AppShellProps) {
             className="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
           >
             Export
+          </button>
+          <button
+            onClick={handleReset}
+            className="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-red-500/60 transition-colors font-medium"
+            title="Alle Daten löschen"
+          >
+            🗑 Löschen
           </button>
         </div>
       </header>

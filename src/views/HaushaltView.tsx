@@ -159,7 +159,7 @@ function PersonCard({ person, onSave, onDelete }: PersonCardProps) {
 // ── Add Person Form ───────────────────────────────────────────
 
 interface AddPersonFormProps {
-  role: 'partner' | 'kind';
+  role: 'hauptverdiener' | 'partner' | 'kind';
   onAdd: (data: Omit<Person, 'id'>) => void;
   onCancel: () => void;
 }
@@ -167,12 +167,12 @@ interface AddPersonFormProps {
 function AddPersonForm({ role, onAdd, onCancel }: AddPersonFormProps) {
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState(
-    role === 'partner' ? currentYear - 35 : currentYear - 10
+    role === 'kind' ? currentYear - 10 : currentYear - 35
   );
   const [income, setIncome] = useState(0);
   const [retirementAge, setRetirementAge] = useState(67);
 
-  const roleLabel = role === 'partner' ? 'Partner/in' : 'Kind';
+  const roleLabel = role === 'hauptverdiener' ? 'Hauptverdiener/in' : role === 'partner' ? 'Partner/in' : 'Kind';
 
   const handleAdd = () => {
     if (!name.trim()) return;
@@ -204,18 +204,31 @@ function AddPersonForm({ role, onAdd, onCancel }: AddPersonFormProps) {
             max={currentYear}
           />
         </div>
-        {role === 'partner' && (
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Netto/Monat (€)</label>
-            <input
-              type="number"
-              className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-              value={income}
-              onChange={(e) => setIncome(parseInt(e.target.value) || 0)}
-              min={0}
-              step={100}
-            />
-          </div>
+        {role !== 'kind' && (
+          <>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Netto/Monat (€)</label>
+              <input
+                type="number"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                value={income}
+                onChange={(e) => setIncome(parseInt(e.target.value) || 0)}
+                min={0}
+                step={100}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Rentenalter</label>
+              <input
+                type="number"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                value={retirementAge}
+                onChange={(e) => setRetirementAge(parseInt(e.target.value) || 67)}
+                min={55}
+                max={75}
+              />
+            </div>
+          </>
         )}
       </div>
       <div className="flex gap-2">
@@ -296,6 +309,7 @@ export function HaushaltView() {
     setHouseholdConfig,
   } = useFinanzplanStore.getState();
 
+  const [showAddHauptverdiener, setShowAddHauptverdiener] = useState(false);
   const [showAddPartner, setShowAddPartner] = useState(false);
   const [showAddKind, setShowAddKind] = useState(false);
 
@@ -330,11 +344,24 @@ export function HaushaltView() {
 
         <div className="space-y-3">
           {/* Hauptverdiener */}
-          {hauptverdiener && (
+          {hauptverdiener ? (
             <PersonCard
               person={hauptverdiener}
               onSave={(updates) => updatePerson(hauptverdiener.id, updates)}
             />
+          ) : showAddHauptverdiener ? (
+            <AddPersonForm
+              role="hauptverdiener"
+              onAdd={(data) => { addPerson(data); setShowAddHauptverdiener(false); }}
+              onCancel={() => setShowAddHauptverdiener(false)}
+            />
+          ) : (
+            <button
+              onClick={() => setShowAddHauptverdiener(true)}
+              className="w-full border border-dashed border-primary/40 bg-primary/5 rounded-xl p-4 text-sm text-primary hover:bg-primary/10 transition-colors text-left font-medium"
+            >
+              + Hauptverdiener/in hinzufügen
+            </button>
           )}
 
           {/* Partner */}
