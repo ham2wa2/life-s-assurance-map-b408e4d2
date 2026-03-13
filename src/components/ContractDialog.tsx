@@ -1,31 +1,60 @@
-import { useState } from 'react';
-import { useInsurance } from '@/hooks/useInsurance';
-import { Contract, RiskType, RISK_LABELS } from '@/lib/insurance-types';
+import { useState, useMemo } from 'react';
+import { useFinanzplanStore } from '@/store/finanzplanStore';
+import { Contract as LegacyContract, RiskType, RISK_LABELS } from '@/lib/insurance-types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 
 interface ContractDialogProps {
-  contract?: Contract; // undefined = add mode
+  contract?: LegacyContract; // undefined = add mode
   onClose: () => void;
 }
 
 export function ContractDialog({ contract, onClose }: ContractDialogProps) {
-  const { addContract, editContract, deleteContract } = useInsurance();
+  // ── Reactive subscription: persons list only ──────────────────────────────
+  // RULE: Never call .filter() inside a Zustand selector — use useMemo instead.
+  // Other store reads (actions, one-time lookups) use getState() to avoid
+  // creating unnecessary subscriptions that can trigger infinite re-renders.
+  const allPersons = useFinanzplanStore((s) => s.persons);
+  const persons    = useMemo(() => allPersons.filter((p) => p.role !== 'kind'), [allPersons]);
+
   const isEdit = !!contract;
 
-  const [provider, setProvider] = useState(contract?.provider ?? '');
-  const [name, setName] = useState(contract?.name ?? '');
-  const [beneficiary, setBeneficiary] = useState(contract?.beneficiary ?? '');
-  const [riskType, setRiskType] = useState<RiskType>(contract?.riskType ?? 'tod');
-  const [coverageAmount, setCoverageAmount] = useState(contract?.coverageAmount ?? 100000);
-  const [monthlyPremium, setMonthlyPremium] = useState(contract?.monthlyPremium ?? 25);
-  const [endYear, setEndYear] = useState(contract?.endYear ?? 2045);
+  // ── Form state ────────────────────────────────────────────────────────────
+  const [provider,       setProvider]      = useState(contract?.provider ?? '');
+  const [name,           setName]          = useState(contract?.name ?? '');
+  const [beneficiary,    setBeneficiary]   = useState(contract?.beneficiary ?? '');
+  const [riskType,       setRiskType]      = useState<RiskType>(contract?.riskType ?? 'tod');
+  const [coverageAmount, setCoverageAmount]= useState(contract?.coverageAmount ?? 100000);
+  const [monthlyPremium, setMonthlyPremium]= useState(contract?.monthlyPremium ?? 25);
+  const [endYear,        setEndYear]       = useState(contract?.endYear ?? 2045);
+
+  // ── Person assignment ─────────────────────────────────────────────────────
+  // Use a lazy initializer so we only call getState() once on mount.
+  // This avoids subscribing to s.contracts which would fire on every contract change.
+  const [personId, setPersonId] = useState<string | undefined>(() => {
+    if (contract) {
+      // Edit mode: look up existing personId from store (non-reactive one-time read)
+      return useFinanzplanStore.getState().contracts.find((c) => c.id === contract.id)?.personId;
+    }
+    // Add mode: auto-assign if only one adult person exists
+    const adults = useFinanzplanStore.getState().persons.filter((p) => p.role !== 'kind');
+    return adults.length === 1 ? adults[0].id : undefined;
+  });
 
   const canSave = provider.trim().length > 0 && name.trim().length > 0 && monthlyPremium > 0;
 
   const handleSave = () => {
     if (!canSave) return;
+
+    // Non-reactive read of actions via getState() — avoids subscription overhead
+    const { addContract, updateContract } = useFinanzplanStore.getState();
+
+    // Preserve the existing `active` flag when editing
+    const currentActive = isEdit && contract
+      ? (useFinanzplanStore.getState().contracts.find((c) => c.id === contract.id)?.active ?? true)
+      : true;
+
     const data = {
       name: name.trim(),
       provider: provider.trim(),
@@ -34,11 +63,12 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
       coverageAmount,
       monthlyPremium,
       endYear,
-      active: contract?.active ?? true,
+      active: currentActive,
+      ...(personId ? { personId } : {}),
     };
 
     if (isEdit && contract) {
-      editContract(contract.id, data);
+      updateContract(contract.id, data);
     } else {
       addContract(data);
     }
@@ -47,7 +77,7 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
 
   const handleDelete = () => {
     if (contract) {
-      deleteContract(contract.id);
+      useFinanzplanStore.getState().deleteContract(contract.id);
       onClose();
     }
   };
@@ -60,6 +90,34 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
         </h2>
 
         <div className="space-y-4">
+
+          {/* ── Person-Zuordnung ── */}
+          {persons.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">
+                Für wen? <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex gap-2 flex-wrap">
+                {persons.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPersonId(p.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      personId === p.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    {p.name || (p.role === 'hauptverdiener' ? 'Hauptverdiener/in' : 'Partner/in')}
+                  </button>
+                ))}
+              </div>
+              {!personId && (
+                <p className="text-xs text-destructive mt-1">Bitte eine Person zuordnen</p>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs text-muted-foreground">Anbieter</Label>
@@ -123,7 +181,11 @@ export function ContractDialog({ contract, onClose }: ContractDialogProps) {
           <button onClick={onClose} className="py-3 px-4 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
             Abbrechen
           </button>
-          <button onClick={handleSave} disabled={!canSave} className="py-3 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all">
+          <button
+            onClick={handleSave}
+            disabled={!canSave || (persons.length > 0 && !personId)}
+            className="py-3 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all"
+          >
             {isEdit ? 'Speichern' : 'Hinzufügen'}
           </button>
         </div>

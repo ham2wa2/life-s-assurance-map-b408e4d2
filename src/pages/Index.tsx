@@ -10,12 +10,12 @@
 
 import { useFinanzplanStore } from '@/store/finanzplanStore';
 import { AppShell } from '@/components/AppShell';
-import { OnboardingWizard } from '@/components/OnboardingWizard';
+import { OnboardingWizard, OnboardingResult } from '@/components/OnboardingWizard';
 import { DashboardView } from '@/views/DashboardView';
 import { HaushaltView } from '@/views/HaushaltView';
 import { AbsicherungView } from '@/views/AbsicherungView';
-import { VermoegenView, PlanungView, SzenarienView } from '@/views/PlaceholderView';
-import { HouseholdData, Contract } from '@/lib/insurance-types';
+import { VermoegenView } from '@/views/VermoegenView';
+import { PlanungView, SzenarienView } from '@/views/PlaceholderView';
 
 // ── Tab Router ────────────────────────────────────────────────
 
@@ -43,35 +43,10 @@ const Index = () => {
   if (!onboardingComplete) {
     return (
       <OnboardingWizard
-        onComplete={(household: HouseholdData, contracts: Contract[]) => {
-          const currentYear = new Date().getFullYear();
-
-          const persons = [
-            ...household.persons.map((p) => ({
-              id: crypto.randomUUID(),
-              role: p.role as 'hauptverdiener' | 'partner',
-              name: p.name,
-              birthYear: currentYear - p.age,
-              netIncomeMonthly: p.netIncome,
-              retirementAge: household.retirementAge,
-            })),
-            ...household.children.map((k) => ({
-              id: crypto.randomUUID(),
-              role: 'kind' as const,
-              name: k.name,
-              birthYear: currentYear - k.age,
-              netIncomeMonthly: 0,
-              retirementAge: 67,
-            })),
-          ];
-
-          setPersons(persons);
-          setContracts(contracts);
-          setHouseholdConfig({
-            mortgageAmount: household.mortgageAmount,
-            mortgageEndYear: household.mortgageEndYear,
-            studyCostPerYear: household.studyCostPerYear,
-          });
+        onComplete={(result: OnboardingResult) => {
+          setPersons(result.persons);
+          setContracts(result.contracts);
+          if (result.household) setHouseholdConfig(result.household);
           completeOnboarding();
         }}
       />

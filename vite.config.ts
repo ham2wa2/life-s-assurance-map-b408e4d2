@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    // Inline all JS/CSS into index.html → single self-contained file, works over file://
+    // Inline all JS/CSS → single self-contained file
     viteSingleFile(),
   ].filter(Boolean),
   resolve: {

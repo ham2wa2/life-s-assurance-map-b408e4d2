@@ -19,7 +19,7 @@ export type PersonRole = 'hauptverdiener' | 'partner' | 'kind';
 /**
  * Insurance/contract type.
  * 'tod' and 'bu' are computed by insurance-calculator.
- * Others affect expenses only.
+ * Altersvorsorge types (gesetzliche_rente, private_rente, kapitalbildend) feed into Planung.
  */
 export type ContractRiskType =
   | 'tod'
@@ -29,7 +29,25 @@ export type ContractRiskType =
   | 'haftpflicht'
   | 'unfall'
   | 'sachwerte'
+  | 'gesetzliche_rente'
+  | 'private_rente'
+  | 'kapitalbildend'
   | 'sonstige';
+
+/** Labels for all contract types */
+export const CONTRACT_TYPE_LABELS: Record<ContractRiskType, string> = {
+  tod:               '🛡️ Todesfall',
+  bu:                '💼 BU',
+  kranken:           '🏥 Kranken',
+  haftpflicht:       '⚖️ Haftpflicht',
+  unfall:            '🚑 Unfall',
+  sachwerte:         '🏠 Sach',
+  ruhestand:         '🎯 Ruhestand',
+  sonstige:          '📋 Sonstige',
+  gesetzliche_rente: '🏛️ Gesetzl. Rente',
+  private_rente:     '💰 Private Rente',
+  kapitalbildend:    '📈 Kapitalbildend',
+};
 
 export type AssetKategorie =
   | 'immobilie'
@@ -73,6 +91,31 @@ export interface Person {
 }
 
 /**
+ * Three-value model for statutory pension (Gesetzliche Rentenversicherung).
+ * Essential for BU scenarios: at BU date contributions stop → use renteBeiSofortigem as floor.
+ */
+export interface GesetzlicheRenteData {
+  /** Already secured monthly pension if contributions stopped TODAY (€/month at Rentenalter) */
+  renteBeiSofortigem: number;
+  /** DRV projection with standard wage-growth assumptions (from Renteninformation) */
+  renteMitStandardAnnahme: number;
+  /** Projection if last years' contributions continue unchanged */
+  renteBeiGleichbleibendem: number;
+  /** Year of last Rentenbescheid, e.g. 2025 */
+  bescheidJahr: number;
+}
+
+/**
+ * A single benefit/coverage component within a contract (Mehrfachleistung).
+ * The first Leistung is the primary one; further entries are Zusatzbausteine.
+ */
+export interface Leistung {
+  typ: ContractRiskType;
+  betrag: number;
+  bezeichnung?: string;
+}
+
+/**
  * Insurance or pension contract.
  */
 export interface Contract {
@@ -80,15 +123,21 @@ export interface Contract {
   riskType: ContractRiskType;
   provider: string;
   name: string;
-  /** Coverage amount in €. For BU: annual benefit. */
+  /** Coverage amount in €. For BU: annual benefit. For private_rente: monthly pension. For kapitalbildend: payout. */
   coverageAmount: number;
-  /** Monthly premium in €. */
+  /** Monthly premium in €. 0 for gesetzliche_rente. */
   monthlyPremium: number;
-  /** Year contract expires. Coverage counts only if endYear >= currentYear. */
+  /** Year contract expires/matures. For gesetzliche_rente: Renteneintrittsjahr. */
   endYear: number;
   beneficiary?: string;
-  /** Toggle for what-if analysis without deleting. (LL-009 applies to isActive on assets) */
+  /** Person this contract belongs to (references Person.id) */
+  personId?: string;
+  /** Toggle for what-if analysis without deleting. */
   active: boolean;
+  /** Multiple benefit types in one contract (Mehrfachleistung). */
+  leistungen?: Leistung[];
+  /** GRV-specific 3-value model. Only set when riskType === 'gesetzliche_rente'. */
+  gesetzlicheRente?: GesetzlicheRenteData;
 }
 
 /**

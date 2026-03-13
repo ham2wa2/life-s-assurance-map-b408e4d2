@@ -305,21 +305,23 @@ export const useFinanzplanStore = create<FinanzplanStore>()(
 
       importData: (data) => {
         set({
-          persons: data.persons,
-          contracts: data.contracts,
-          assets: data.assets,
-          liabilities: data.liabilities,
-          household: data.household,
-          scenarios: data.scenarios,
+          persons: data.persons ?? [],
+          contracts: data.contracts ?? [],
+          assets: data.assets ?? [],
+          liabilities: data.liabilities ?? [],
+          household: data.household ?? {},
+          scenarios: data.scenarios ?? [],
           onboardingComplete: true,
           activeTab: 'dashboard',
           activeScenarioId:
-            data.scenarios.find((s) => s.isBaseline)?.id ?? BASELINE_SCENARIO_ID,
+            (data.scenarios ?? []).find((s) => s.isBaseline)?.id ?? BASELINE_SCENARIO_ID,
         });
       },
     }),
     {
-      name: 'finanzplan-v2',
+      // Bumped to finanzplan-v3 to force-clear old Sprint-2 localStorage
+      // that was missing assets/liabilities fields.
+      name: 'finanzplan-v3',
       storage: createJSONStorage(() => localStorage),
       version: 1,
       // Do NOT persist activeTab — always open on dashboard
@@ -369,7 +371,7 @@ export const selectActiveScenario = (state: FinanzplanStore) =>
 
 /** Net worth: sum of active assets - sum of active liabilities */
 export const selectNetWorth = (state: FinanzplanStore): number => {
-  const assets = state.assets.filter((a) => a.isActive).reduce((s, a) => s + a.wertAktuell, 0);
-  const liabilities = state.liabilities.filter((l) => l.isActive).reduce((s, l) => s + l.betrag, 0);
+  const assets = (state.assets ?? []).filter((a) => a.isActive).reduce((s, a) => s + a.wertAktuell, 0);
+  const liabilities = (state.liabilities ?? []).filter((l) => l.isActive).reduce((s, l) => s + l.betrag, 0);
   return assets - liabilities;
 };

@@ -1,94 +1,311 @@
-import { useState } from 'react';
-import { HouseholdData, Contract } from '@/lib/insurance-types';
+/**
+ * OnboardingWizard — Sprint 2.5
+ *
+ * Flow:
+ *   Welcome → [Import (→ store, done)] | [Neu → Step 0..3 → onComplete]
+ *
+ * Step 0: Haushalt (Personen)
+ * Step 1: Einkommen & Rentenalter
+ * Step 2: Kredit & Kinder
+ * Step 3: Verträge (mit Person-Zuordnung, Rentenverträge, Mehrfachleistung)
+ */
+
+import { useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import {
+  Contract,
+  ContractRiskType,
+  GesetzlicheRenteData,
+  Leistung,
+  Person,
+  HouseholdConfig,
+} from '@/lib/types';
+import { useFinanzplanStore } from '@/store/finanzplanStore';
+import type { FinanzplanExport } from '@/lib/types';
 
-interface OnboardingWizardProps {
-  onComplete: (household: HouseholdData, contracts: Contract[]) => void;
+// ── Props ─────────────────────────────────────────────────────
+
+export interface OnboardingResult {
+  persons: Person[];
+  contracts: Contract[];
+  household: Partial<HouseholdConfig>;
 }
 
+interface OnboardingWizardProps {
+  onComplete: (result: OnboardingResult) => void;
+}
+
+// ── Constants ─────────────────────────────────────────────────
+
 const STEPS = ['Haushalt', 'Einkommen', 'Kredit & Kinder', 'Verträge'];
+const CURRENT_YEAR = new Date().getFullYear();
+
+const SCHUTZ_TYPES: { type: ContractRiskType; label: string }[] = [
+  { type: 'tod',        label: '🛡️ Tod' },
+  { type: 'bu',         label: '💼 BU' },
+  { type: 'kranken',    label: '🏥 Kranken' },
+  { type: 'haftpflicht',label: '⚖️ Haftpflicht' },
+  { type: 'unfall',     label: '🚑 Unfall' },
+  { type: 'sachwerte',  label: '🏠 Sach' },
+  { type: 'sonstige',   label: '📋 Sonstige' },
+];
+
+const ALTERSVORSORGE_TYPES: { type: ContractRiskType; label: string }[] = [
+  { type: 'gesetzliche_rente', label: '🏛️ Gesetzl. Rente' },
+  { type: 'private_rente',     label: '💰 Private Rente' },
+  { type: 'kapitalbildend',    label: '📈 Kapitalbildend' },
+];
+
+const EMPTY_GRV: GesetzlicheRenteData = {
+  renteBeiSofortigem: 0,
+  renteMitStandardAnnahme: 0,
+  renteBeiGleichbleibendem: 0,
+  bescheidJahr: CURRENT_YEAR - 1,
+};
+
+const EMPTY_CONTRACT = {
+  name: '',
+  provider: '',
+  riskType: 'tod' as ContractRiskType,
+  beneficiary: '',
+  coverageAmount: 100000,
+  monthlyPremium: 25,
+  endYear: 2045,
+  personIdx: 0,                 // 0 = hauptverdiener, 1 = partner
+  grv: { ...EMPTY_GRV },
+  zusatzTyp: 'bu' as ContractRiskType,
+  zusatzBetrag: 0,
+  hasZusatz: false,
+};
+
+// ── Helper ────────────────────────────────────────────────────
+
+const uid = () => crypto.randomUUID();
+
+const isAltersvorsorge = (t: ContractRiskType) =>
+  t === 'gesetzliche_rente' || t === 'private_rente' || t === 'kapitalbildend';
+
+// ── Component ─────────────────────────────────────────────────
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
+  const importData = useFinanzplanStore((s) => s.importData);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  // Mode: welcome or wizard steps
+  const [mode, setMode] = useState<'welcome' | 'wizard'>('welcome');
   const [step, setStep] = useState(0);
 
-  // Step 1: Household
+  // ── Step 0: Haushalt ──────────────────────────────────────
   const [mainName, setMainName] = useState('');
   const [mainAge, setMainAge] = useState(45);
-  const [hasPartner, setHasPartner] = useState(true);
+  const [hasPartner, setHasPartner] = useState(false);
   const [partnerName, setPartnerName] = useState('');
   const [partnerAge, setPartnerAge] = useState(43);
 
-  // Step 2: Income
+  // ── Step 1: Einkommen ─────────────────────────────────────
   const [mainIncome, setMainIncome] = useState(6000);
   const [partnerIncome, setPartnerIncome] = useState(2000);
-  const [retirementAge, setRetirementAge] = useState(67);
+  const [mainRetirementAge, setMainRetirementAge] = useState(67);
+  const [partnerRetirementAge, setPartnerRetirementAge] = useState(67);
 
-  // Step 3: Mortgage & Kids
-  const [hasMortgage, setHasMortgage] = useState(true);
+  // ── Step 2: Kredit & Kinder ───────────────────────────────
+  const [hasMortgage, setHasMortgage] = useState(false);
   const [mortgageAmount, setMortgageAmount] = useState(250000);
   const [mortgageEndYear, setMortgageEndYear] = useState(2035);
   const [children, setChildren] = useState<{ name: string; age: number }[]>([]);
   const [studyCostPerYear, setStudyCostPerYear] = useState(8000);
 
-  // Step 4: Contracts
+  // ── Step 3: Verträge ──────────────────────────────────────
   const [contracts, setContracts] = useState<Omit<Contract, 'id'>[]>([]);
-  const [newContract, setNewContract] = useState({
-    name: '', provider: '', riskType: 'tod' as Contract['riskType'],
-    beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045,
-  });
+  const [nc, setNc] = useState({ ...EMPTY_CONTRACT });
 
-  const addChild = () => setChildren([...children, { name: '', age: 0 }]);
-  const removeChild = (i: number) => setChildren(children.filter((_, idx) => idx !== i));
-  const updateChild = (i: number, field: 'name' | 'age', value: string | number) => {
-    setChildren(children.map((c, idx) => idx === i ? { ...c, [field]: value } : c));
+  // ── Import ────────────────────────────────────────────────
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string) as FinanzplanExport;
+        importData(data);
+        // importData sets onboardingComplete = true → Index.tsx switches to AppShell
+      } catch {
+        alert('Ungültige Datei — bitte eine exportierte Finanzplan-JSON-Datei auswählen.');
+      }
+    };
+    reader.readAsText(file);
   };
+
+  // ── Person list (for contract person selector) ────────────
+
+  const personList = [
+    { idx: 0, name: mainName || 'Hauptverdiener/in', role: 'hauptverdiener' as const },
+    ...(hasPartner
+      ? [{ idx: 1, name: partnerName || 'Partner/in', role: 'partner' as const }]
+      : []),
+  ];
+
+  // ── Contract helpers ──────────────────────────────────────
 
   const addContract = () => {
-    if (!newContract.name.trim() || !newContract.provider.trim()) return;
-    setContracts([...contracts, { ...newContract, active: true }]);
-    setNewContract({ name: '', provider: '', riskType: 'tod', beneficiary: '', coverageAmount: 100000, monthlyPremium: 25, endYear: 2045 });
+    if (!nc.name.trim() || !nc.provider.trim()) return;
+
+    const person = personList[nc.personIdx] ?? personList[0];
+    const personTempId = `temp-${person.role}`; // resolved to real UUID in onComplete
+
+    const leistungen: Leistung[] = nc.hasZusatz && nc.zusatzBetrag > 0
+      ? [{ typ: nc.zusatzTyp, betrag: nc.zusatzBetrag }]
+      : [];
+
+    const base: Omit<Contract, 'id'> = {
+      riskType: nc.riskType,
+      provider: nc.provider.trim(),
+      name: nc.name.trim(),
+      coverageAmount: nc.coverageAmount,
+      monthlyPremium: nc.monthlyPremium,
+      endYear: nc.endYear,
+      beneficiary: nc.beneficiary.trim() || undefined,
+      personId: personTempId,
+      active: true,
+      leistungen: leistungen.length > 0 ? leistungen : undefined,
+      gesetzlicheRente:
+        nc.riskType === 'gesetzliche_rente' ? { ...nc.grv } : undefined,
+    };
+
+    setContracts([...contracts, base]);
+    setNc({ ...EMPTY_CONTRACT });
   };
 
-  const removeContract = (i: number) => setContracts(contracts.filter((_, idx) => idx !== i));
+  const removeContract = (i: number) =>
+    setContracts(contracts.filter((_, idx) => idx !== i));
+
+  // ── Validation ────────────────────────────────────────────
 
   const canProceed = () => {
-    if (step === 0) return mainName.trim().length > 0 && mainAge > 0 && (!hasPartner || partnerName.trim().length > 0);
+    if (step === 0) return mainName.trim().length > 0 && (!hasPartner || partnerName.trim().length > 0);
     if (step === 1) return mainIncome > 0;
-    if (step === 2) return !hasMortgage || (mortgageAmount > 0 && mortgageEndYear > 2026);
+    if (step === 2) return !hasMortgage || (mortgageAmount > 0 && mortgageEndYear > CURRENT_YEAR);
     return true;
   };
 
+  // ── Complete ──────────────────────────────────────────────
+
   const handleComplete = () => {
-    const persons: HouseholdData['persons'] = [
-      { name: mainName.trim(), age: mainAge, role: 'hauptverdiener', netIncome: mainIncome },
+    // Create persons with real UUIDs
+    const mainId = uid();
+    const partnerId = uid();
+
+    const persons: Person[] = [
+      {
+        id: mainId,
+        role: 'hauptverdiener',
+        name: mainName.trim(),
+        birthYear: CURRENT_YEAR - mainAge,
+        netIncomeMonthly: mainIncome,
+        retirementAge: mainRetirementAge,
+      },
+      ...(hasPartner
+        ? [{
+            id: partnerId,
+            role: 'partner' as const,
+            name: partnerName.trim(),
+            birthYear: CURRENT_YEAR - partnerAge,
+            netIncomeMonthly: partnerIncome,
+            retirementAge: partnerRetirementAge,
+          }]
+        : []),
+      ...children
+        .filter((c) => c.name.trim())
+        .map((c) => ({
+          id: uid(),
+          role: 'kind' as const,
+          name: c.name.trim(),
+          birthYear: CURRENT_YEAR - c.age,
+          netIncomeMonthly: 0,
+          retirementAge: 67,
+        })),
     ];
-    if (hasPartner) persons.push({ name: partnerName.trim(), age: partnerAge, role: 'partner', netIncome: partnerIncome });
 
-    const household: HouseholdData = {
-      persons,
-      mortgageAmount: hasMortgage ? mortgageAmount : 0,
-      mortgageEndYear: hasMortgage ? mortgageEndYear : 2026,
-      children: children.filter(c => c.name.trim()),
-      studyCostPerYear,
-      retirementAge,
-    };
-
-    const finalContracts: Contract[] = contracts.map((c, i) => ({
-      ...c, id: `c-${Date.now()}-${i}`, active: true,
+    // Resolve temp personIds → real UUIDs
+    const resolvedContracts: Contract[] = contracts.map((c, i) => ({
+      ...c,
+      id: uid(),
+      personId:
+        c.personId === 'temp-hauptverdiener' ? mainId
+        : c.personId === 'temp-partner'      ? partnerId
+        : undefined,
     }));
 
-    onComplete(household, finalContracts);
+    onComplete({
+      persons,
+      contracts: resolvedContracts,
+      household: {
+        mortgageAmount: hasMortgage ? mortgageAmount : 0,
+        mortgageEndYear: hasMortgage ? mortgageEndYear : CURRENT_YEAR,
+        studyCostPerYear,
+      },
+    });
   };
+
+  // ── Render: Welcome ───────────────────────────────────────
+
+  if (mode === 'welcome') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-3">
+              Zeitachse Absicherung
+            </h1>
+            <p className="text-muted-foreground">
+              Dein persönlicher Finanzplan — Absicherung, Vermögen, Vorsorge
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => setMode('wizard')}
+              className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:opacity-90 transition-opacity"
+            >
+              🆕 Neu starten
+            </button>
+            <button
+              onClick={() => importFileRef.current?.click()}
+              className="w-full py-4 rounded-xl border-2 border-border text-foreground text-base font-semibold hover:bg-muted transition-colors"
+            >
+              📂 Daten importieren
+            </button>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Alle Daten bleiben lokal auf deinem Gerät gespeichert.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Wizard ────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Zeitachse Absicherung</h1>
-          <p className="text-muted-foreground">Richte deine persönliche Versicherungsanalyse ein</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
+            Zeitachse Absicherung
+          </h1>
+          <p className="text-muted-foreground">Richte deinen persönlichen Finanzplan ein</p>
         </div>
 
         {/* Progress */}
@@ -96,91 +313,148 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {STEPS.map((s, i) => (
             <div key={s} className="flex-1">
               <div className={`h-1.5 rounded-full transition-all ${i <= step ? 'bg-primary' : 'bg-muted'}`} />
-              <p className={`text-xs mt-1.5 ${i === step ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{s}</p>
+              <p className={`text-xs mt-1.5 ${i === step ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                {s}
+              </p>
             </div>
           ))}
         </div>
 
         {/* Card */}
         <div className="bg-card rounded-xl border border-border p-6 md:p-8">
-          
-          {/* Step 0: Household */}
+
+          {/* ── Step 0: Haushalt ── */}
           {step === 0 && (
             <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-card-foreground">Wer gehört zum Haushalt?</h2>
-              
+              <h2 className="text-lg font-semibold">Wer gehört zum Haushalt?</h2>
+
               <div className="space-y-3">
                 <Label className="text-sm text-muted-foreground">Hauptverdiener/in</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  <Input placeholder="Name" value={mainName} onChange={e => setMainName(e.target.value)} maxLength={50} />
-                  <Input type="number" placeholder="Alter" value={mainAge || ''} onChange={e => setMainAge(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))} min={18} max={99} />
+                  <Input
+                    placeholder="Name"
+                    value={mainName}
+                    onChange={(e) => setMainName(e.target.value)}
+                    maxLength={50}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Alter"
+                    value={mainAge || ''}
+                    onChange={(e) => setMainAge(Math.min(99, Math.max(18, parseInt(e.target.value) || 18)))}
+                  />
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setHasPartner(!hasPartner)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${hasPartner ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-                >
-                  {hasPartner ? '✓ Partner/in vorhanden' : 'Partner/in hinzufügen'}
-                </button>
-              </div>
+              <button
+                onClick={() => setHasPartner(!hasPartner)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  hasPartner ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                {hasPartner ? '✓ Partner/in vorhanden' : '+ Partner/in hinzufügen'}
+              </button>
 
               {hasPartner && (
                 <div className="space-y-3">
                   <Label className="text-sm text-muted-foreground">Partner/in</Label>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input placeholder="Name" value={partnerName} onChange={e => setPartnerName(e.target.value)} maxLength={50} />
-                    <Input type="number" placeholder="Alter" value={partnerAge || ''} onChange={e => setPartnerAge(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))} min={18} max={99} />
+                    <Input
+                      placeholder="Name"
+                      value={partnerName}
+                      onChange={(e) => setPartnerName(e.target.value)}
+                      maxLength={50}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Alter"
+                      value={partnerAge || ''}
+                      onChange={(e) => setPartnerAge(Math.min(99, Math.max(18, parseInt(e.target.value) || 18)))}
+                    />
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 1: Income */}
+          {/* ── Step 1: Einkommen ── */}
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-card-foreground">Einkommen & Rente</h2>
-              
+              <h2 className="text-lg font-semibold">Einkommen & Rentenalter</h2>
+
               <div className="space-y-3">
-                <Label className="text-sm text-muted-foreground">{mainName} – Nettoeinkommen (monatlich)</Label>
+                <Label className="text-sm text-muted-foreground">
+                  {mainName} – Nettoeinkommen/Monat
+                </Label>
                 <div className="flex items-center gap-3">
-                  <Slider value={[mainIncome]} min={500} max={15000} step={100} onValueChange={([v]) => setMainIncome(v)} />
-                  <span className="font-mono font-bold text-card-foreground min-w-[5rem] text-right">{mainIncome}€</span>
+                  <Slider
+                    value={[mainIncome]}
+                    min={500} max={15000} step={100}
+                    onValueChange={([v]) => setMainIncome(v)}
+                  />
+                  <span className="font-mono font-bold min-w-[5rem] text-right">{mainIncome}€</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm text-muted-foreground">
+                  {mainName} – Rentenalter
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    value={[mainRetirementAge]}
+                    min={60} max={70} step={1}
+                    onValueChange={([v]) => setMainRetirementAge(v)}
+                  />
+                  <span className="font-mono font-bold min-w-[3rem] text-right">{mainRetirementAge}J</span>
                 </div>
               </div>
 
               {hasPartner && (
-                <div className="space-y-3">
-                  <Label className="text-sm text-muted-foreground">{partnerName} – Nettoeinkommen (monatlich)</Label>
-                  <div className="flex items-center gap-3">
-                    <Slider value={[partnerIncome]} min={0} max={15000} step={100} onValueChange={([v]) => setPartnerIncome(v)} />
-                    <span className="font-mono font-bold text-card-foreground min-w-[5rem] text-right">{partnerIncome}€</span>
+                <>
+                  <div className="space-y-3">
+                    <Label className="text-sm text-muted-foreground">
+                      {partnerName} – Nettoeinkommen/Monat
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <Slider
+                        value={[partnerIncome]}
+                        min={0} max={15000} step={100}
+                        onValueChange={([v]) => setPartnerIncome(v)}
+                      />
+                      <span className="font-mono font-bold min-w-[5rem] text-right">{partnerIncome}€</span>
+                    </div>
                   </div>
-                </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm text-muted-foreground">
+                      {partnerName} – Rentenalter
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <Slider
+                        value={[partnerRetirementAge]}
+                        min={60} max={70} step={1}
+                        onValueChange={([v]) => setPartnerRetirementAge(v)}
+                      />
+                      <span className="font-mono font-bold min-w-[3rem] text-right">{partnerRetirementAge}J</span>
+                    </div>
+                  </div>
+                </>
               )}
-
-              <div className="space-y-3">
-                <Label className="text-sm text-muted-foreground">Geplantes Rentenalter</Label>
-                <div className="flex items-center gap-3">
-                  <Slider value={[retirementAge]} min={60} max={70} step={1} onValueChange={([v]) => setRetirementAge(v)} />
-                  <span className="font-mono font-bold text-card-foreground min-w-[3rem] text-right">{retirementAge}J</span>
-                </div>
-              </div>
             </div>
           )}
 
-          {/* Step 2: Mortgage & Kids */}
+          {/* ── Step 2: Kredit & Kinder ── */}
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-card-foreground">Kredit & Kinder</h2>
+              <h2 className="text-lg font-semibold">Kredit & Kinder</h2>
 
               <button
                 onClick={() => setHasMortgage(!hasMortgage)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${hasMortgage ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  hasMortgage ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
               >
-                {hasMortgage ? '✓ Immobilienkredit vorhanden' : 'Immobilienkredit hinzufügen'}
+                {hasMortgage ? '✓ Immobilienkredit vorhanden' : '+ Immobilienkredit hinzufügen'}
               </button>
 
               {hasMortgage && (
@@ -188,33 +462,70 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Restschuld</Label>
                     <div className="flex items-center gap-3">
-                      <Slider value={[mortgageAmount]} min={10000} max={1000000} step={10000} onValueChange={([v]) => setMortgageAmount(v)} />
-                      <span className="font-mono font-bold text-card-foreground min-w-[5rem] text-right">{(mortgageAmount / 1000).toFixed(0)}k€</span>
+                      <Slider
+                        value={[mortgageAmount]}
+                        min={10000} max={1000000} step={10000}
+                        onValueChange={([v]) => setMortgageAmount(v)}
+                      />
+                      <span className="font-mono font-bold min-w-[5rem] text-right">
+                        {(mortgageAmount / 1000).toFixed(0)}k€
+                      </span>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Tilgungsende</Label>
                     <div className="flex items-center gap-3">
-                      <Slider value={[mortgageEndYear]} min={2027} max={2055} step={1} onValueChange={([v]) => setMortgageEndYear(v)} />
-                      <span className="font-mono font-bold text-card-foreground min-w-[3rem] text-right">{mortgageEndYear}</span>
+                      <Slider
+                        value={[mortgageEndYear]}
+                        min={CURRENT_YEAR + 1} max={2060} step={1}
+                        onValueChange={([v]) => setMortgageEndYear(v)}
+                      />
+                      <span className="font-mono font-bold min-w-[3rem] text-right">{mortgageEndYear}</span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Children */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm text-muted-foreground">Kinder</Label>
-                  <button onClick={addChild} className="text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
+                  <button
+                    onClick={() => setChildren([...children, { name: '', age: 0 }])}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                  >
                     + Kind hinzufügen
                   </button>
                 </div>
                 {children.map((child, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <Input placeholder="Name" value={child.name} onChange={e => updateChild(i, 'name', e.target.value)} maxLength={50} className="flex-1" />
-                    <Input type="number" placeholder="Alter" value={child.age || ''} onChange={e => updateChild(i, 'age', Math.min(30, Math.max(0, parseInt(e.target.value) || 0)))} className="w-20" min={0} max={30} />
-                    <button onClick={() => removeChild(i)} className="text-destructive hover:text-destructive/80 text-sm px-2">✕</button>
+                    <Input
+                      placeholder="Name"
+                      value={child.name}
+                      onChange={(e) =>
+                        setChildren(children.map((c, idx) =>
+                          idx === i ? { ...c, name: e.target.value } : c
+                        ))
+                      }
+                      maxLength={50}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Alter"
+                      value={child.age || ''}
+                      onChange={(e) =>
+                        setChildren(children.map((c, idx) =>
+                          idx === i ? { ...c, age: Math.min(30, Math.max(0, parseInt(e.target.value) || 0)) } : c
+                        ))
+                      }
+                      className="w-20"
+                    />
+                    <button
+                      onClick={() => setChildren(children.filter((_, idx) => idx !== i))}
+                      className="text-destructive hover:text-destructive/80 text-sm px-2"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
@@ -223,83 +534,344 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Studiumskosten pro Kind/Jahr</Label>
                   <div className="flex items-center gap-3">
-                    <Slider value={[studyCostPerYear]} min={0} max={20000} step={500} onValueChange={([v]) => setStudyCostPerYear(v)} />
-                    <span className="font-mono font-bold text-card-foreground min-w-[5rem] text-right">{(studyCostPerYear / 1000).toFixed(1)}k€</span>
+                    <Slider
+                      value={[studyCostPerYear]}
+                      min={0} max={20000} step={500}
+                      onValueChange={([v]) => setStudyCostPerYear(v)}
+                    />
+                    <span className="font-mono font-bold min-w-[5rem] text-right">
+                      {(studyCostPerYear / 1000).toFixed(1)}k€
+                    </span>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 3: Contracts */}
+          {/* ── Step 3: Verträge ── */}
           {step === 3 && (
             <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-card-foreground">Bestehende Verträge</h2>
-              
-              {/* Existing contracts list */}
+              <h2 className="text-lg font-semibold">Bestehende Verträge</h2>
+
+              {/* Existing contracts */}
               {contracts.length > 0 && (
                 <div className="space-y-2">
-                  {contracts.map((c, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/50">
-                      <div>
-                        <p className="text-sm font-medium text-card-foreground">{c.provider} · {c.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {(c.coverageAmount / 1000).toFixed(0)}k€ · {c.monthlyPremium}€/mtl · bis {c.endYear}
-                        </p>
+                  {contracts.map((c, i) => {
+                    const person = personList.find(
+                      (p) => `temp-${p.role}` === c.personId
+                    );
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/50"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            {c.provider} · {c.name}
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({person?.name ?? '—'})
+                            </span>
+                          </p>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {c.riskType === 'gesetzliche_rente'
+                              ? `GRV · ${c.gesetzlicheRente?.renteBeiGleichbleibendem ?? 0}€/mtl (Hochr.)`
+                              : `${(c.coverageAmount / 1000).toFixed(0)}k€ · ${c.monthlyPremium}€/mtl · bis ${c.endYear}`
+                            }
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeContract(i)}
+                          className="text-destructive hover:text-destructive/80 text-sm px-2"
+                        >
+                          ✕
+                        </button>
                       </div>
-                      <button onClick={() => removeContract(i)} className="text-destructive hover:text-destructive/80 text-sm px-2">✕</button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
               {/* Add contract form */}
-              <div className="p-4 rounded-lg border border-border space-y-3">
-                <p className="text-sm font-medium text-card-foreground">Vertrag hinzufügen</p>
+              <div className="p-4 rounded-lg border border-border space-y-4">
+                <p className="text-sm font-medium">Vertrag hinzufügen</p>
+
+                {/* Person selector */}
+                {personList.length > 1 && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Für wen?</Label>
+                    <div className="flex gap-2">
+                      {personList.map((p) => (
+                        <button
+                          key={p.idx}
+                          onClick={() => setNc({ ...nc, personIdx: p.idx })}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            nc.personIdx === p.idx
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-secondary-foreground'
+                          }`}
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Provider + Name */}
                 <div className="grid grid-cols-2 gap-3">
-                  <Input placeholder="Anbieter (z.B. Allianz)" value={newContract.provider} onChange={e => setNewContract({ ...newContract, provider: e.target.value })} maxLength={50} />
-                  <Input placeholder="Bezeichnung" value={newContract.name} onChange={e => setNewContract({ ...newContract, name: e.target.value })} maxLength={100} />
-                </div>
-                <div>
-                  <Input placeholder="Begünstigter (z.B. Max Mustermann)" value={newContract.beneficiary} onChange={e => setNewContract({ ...newContract, beneficiary: e.target.value })} maxLength={100} />
-                </div>
-
-                <div className="flex gap-2 flex-wrap">
-                  {(['tod', 'bu', 'unfall', 'sachwerte'] as const).map(rt => (
-                    <button
-                      key={rt}
-                      onClick={() => setNewContract({ ...newContract, riskType: rt })}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        newContract.riskType === rt ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                      }`}
-                    >
-                      {{ tod: '🛡️ Tod', bu: '💼 BU', unfall: '🚑 Unfall', sachwerte: '🏠 Sach' }[rt]}
-                    </button>
-                  ))}
+                  <Input
+                    placeholder="Anbieter (z.B. Allianz)"
+                    value={nc.provider}
+                    onChange={(e) => setNc({ ...nc, provider: e.target.value })}
+                    maxLength={50}
+                  />
+                  <Input
+                    placeholder="Bezeichnung"
+                    value={nc.name}
+                    onChange={(e) => setNc({ ...nc, name: e.target.value })}
+                    maxLength={100}
+                  />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Versicherungssumme</Label>
-                  <div className="flex items-center gap-3">
-                    <Slider value={[newContract.coverageAmount]} min={10000} max={500000} step={10000} onValueChange={([v]) => setNewContract({ ...newContract, coverageAmount: v })} />
-                    <span className="font-mono text-sm text-card-foreground min-w-[4rem] text-right">{(newContract.coverageAmount / 1000).toFixed(0)}k€</span>
+                {/* Contract type — Schutz */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Schutzversicherung</Label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {SCHUTZ_TYPES.map(({ type, label }) => (
+                      <button
+                        key={type}
+                        onClick={() => setNc({ ...nc, riskType: type })}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          nc.riskType === type
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Beitrag/Monat (€)</Label>
-                    <Input type="number" value={newContract.monthlyPremium || ''} onChange={e => setNewContract({ ...newContract, monthlyPremium: Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)) })} min={1} max={9999} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Laufzeitende</Label>
-                    <Input type="number" value={newContract.endYear || ''} onChange={e => setNewContract({ ...newContract, endYear: Math.min(2070, Math.max(2027, parseInt(e.target.value) || 2045)) })} min={2027} max={2070} />
+                {/* Contract type — Altersvorsorge */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Altersvorsorge</Label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {ALTERSVORSORGE_TYPES.map(({ type, label }) => (
+                      <button
+                        key={type}
+                        onClick={() => setNc({ ...nc, riskType: type })}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          nc.riskType === type
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
+
+                {/* ── GRV Form ── */}
+                {nc.riskType === 'gesetzliche_rente' && (
+                  <div className="space-y-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <p className="text-xs font-semibold text-blue-800">
+                      Werte aus dem Rentenbescheid
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Rente bei sofortigem Bezug (bereits erworben) €/mtl
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder="z.B. 1100"
+                          value={nc.grv.renteBeiSofortigem || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              grv: { ...nc.grv, renteBeiSofortigem: parseInt(e.target.value) || 0 },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Hochrechnung mit Standardannahmen (DRV) €/mtl
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder="z.B. 1800"
+                          value={nc.grv.renteMitStandardAnnahme || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              grv: { ...nc.grv, renteMitStandardAnnahme: parseInt(e.target.value) || 0 },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Hochrechnung bei gleichbleibendem Verdienst €/mtl
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder="z.B. 1650"
+                          value={nc.grv.renteBeiGleichbleibendem || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              grv: { ...nc.grv, renteBeiGleichbleibendem: parseInt(e.target.value) || 0 },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Jahr des letzten Rentenbescheids
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder={String(CURRENT_YEAR - 1)}
+                          value={nc.grv.bescheidJahr || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              grv: {
+                                ...nc.grv,
+                                bescheidJahr: Math.min(
+                                  CURRENT_YEAR,
+                                  Math.max(2000, parseInt(e.target.value) || CURRENT_YEAR - 1)
+                                ),
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    {/* coverageAmount = renteBeiGleichbleibendem for display purposes */}
+                  </div>
+                )}
+
+                {/* ── Standard Form (non-GRV) ── */}
+                {nc.riskType !== 'gesetzliche_rente' && (
+                  <>
+                    {/* Beneficiary (only for Schutz) */}
+                    {!isAltersvorsorge(nc.riskType) && (
+                      <Input
+                        placeholder="Begünstigter (z.B. Max Mustermann)"
+                        value={nc.beneficiary}
+                        onChange={(e) => setNc({ ...nc, beneficiary: e.target.value })}
+                        maxLength={100}
+                      />
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">
+                        {nc.riskType === 'private_rente'
+                          ? 'Garantierte Monatsrente (€)'
+                          : nc.riskType === 'kapitalbildend'
+                          ? 'Prognostizierte Ablaufleistung (€)'
+                          : 'Versicherungssumme'}
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Slider
+                          value={[nc.coverageAmount]}
+                          min={1000}
+                          max={nc.riskType === 'private_rente' ? 5000 : 1000000}
+                          step={nc.riskType === 'private_rente' ? 50 : 10000}
+                          onValueChange={([v]) => setNc({ ...nc, coverageAmount: v })}
+                        />
+                        <span className="font-mono text-sm min-w-[5rem] text-right">
+                          {nc.riskType === 'private_rente'
+                            ? `${nc.coverageAmount}€/mtl`
+                            : `${(nc.coverageAmount / 1000).toFixed(0)}k€`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Beitrag/Monat (€)</Label>
+                        <Input
+                          type="number"
+                          value={nc.monthlyPremium || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              monthlyPremium: Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)),
+                            })
+                          }
+                          min={0} max={9999}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          {isAltersvorsorge(nc.riskType) ? 'Rentenbeginn' : 'Laufzeitende'}
+                        </Label>
+                        <Input
+                          type="number"
+                          value={nc.endYear || ''}
+                          onChange={(e) =>
+                            setNc({
+                              ...nc,
+                              endYear: Math.min(2080, Math.max(CURRENT_YEAR + 1, parseInt(e.target.value) || 2045)),
+                            })
+                          }
+                          min={CURRENT_YEAR + 1} max={2080}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mehrfachleistung — only for Schutzversicherungen */}
+                    {!isAltersvorsorge(nc.riskType) && (
+                      <div className="space-y-2 pt-1 border-t border-border">
+                        <button
+                          onClick={() => setNc({ ...nc, hasZusatz: !nc.hasZusatz })}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {nc.hasZusatz ? '▼ Zusatzbaustein' : '+ Zusatzbaustein (Mehrfachleistung)'}
+                        </button>
+                        {nc.hasZusatz && (
+                          <div className="flex gap-2 items-center">
+                            <select
+                              value={nc.zusatzTyp}
+                              onChange={(e) =>
+                                setNc({ ...nc, zusatzTyp: e.target.value as ContractRiskType })
+                              }
+                              className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-xs"
+                            >
+                              {SCHUTZ_TYPES.filter((t) => t.type !== nc.riskType).map(({ type, label }) => (
+                                <option key={type} value={type}>{label}</option>
+                              ))}
+                            </select>
+                            <Input
+                              type="number"
+                              placeholder="Betrag €"
+                              value={nc.zusatzBetrag || ''}
+                              onChange={(e) =>
+                                setNc({ ...nc, zusatzBetrag: parseInt(e.target.value) || 0 })
+                              }
+                              className="w-28"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <button
                   onClick={addContract}
-                  disabled={!newContract.name.trim() || !newContract.provider.trim()}
+                  disabled={
+                    !nc.name.trim() ||
+                    !nc.provider.trim() ||
+                    (nc.riskType === 'gesetzliche_rente' &&
+                      nc.grv.renteBeiSofortigem === 0 &&
+                      nc.grv.renteBeiGleichbleibendem === 0)
+                  }
                   className="w-full py-2 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 disabled:opacity-40 transition-all"
                 >
                   + Vertrag hinzufügen
@@ -308,7 +880,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
               {contracts.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-2">
-                  Füge mindestens einen Vertrag hinzu, oder überspringe diesen Schritt.
+                  Füge bestehende Verträge hinzu, oder überspringe diesen Schritt.
                 </p>
               )}
             </div>
@@ -316,14 +888,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
           {/* Navigation */}
           <div className="flex gap-3 mt-8">
-            {step > 0 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                className="flex-1 py-3 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
-              >
-                Zurück
-              </button>
-            )}
+            <button
+              onClick={() => step === 0 ? setMode('welcome') : setStep(step - 1)}
+              className="flex-1 py-3 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+            >
+              {step === 0 ? '← Zurück' : 'Zurück'}
+            </button>
             {step < 3 ? (
               <button
                 onClick={() => setStep(step + 1)}

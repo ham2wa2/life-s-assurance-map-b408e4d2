@@ -126,19 +126,19 @@ function PersonCard({ person, onSave, onDelete }: PersonCardProps) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+    <div
+      className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors cursor-pointer"
+      onClick={() => setEditing(true)}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{roleLabel}</p>
           <p className="text-lg font-semibold text-foreground">{person.name || '—'}</p>
           <p className="text-sm text-muted-foreground">{person.birthYear} · {age} Jahre</p>
         </div>
-        <button
-          onClick={() => setEditing(true)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground border border-border rounded-md px-3 py-1.5 hover:bg-muted/50"
-        >
-          Bearbeiten
-        </button>
+        <span className="text-xs text-muted-foreground border border-border rounded-md px-3 py-1.5">
+          ✏️ Bearbeiten
+        </span>
       </div>
       {person.role !== 'kind' && (
         <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
