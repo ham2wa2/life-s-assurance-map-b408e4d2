@@ -15,7 +15,8 @@ import { DashboardView } from '@/views/DashboardView';
 import { HaushaltView } from '@/views/HaushaltView';
 import { AbsicherungView } from '@/views/AbsicherungView';
 import { VermoegenView } from '@/views/VermoegenView';
-import { PlanungView, SzenarienView } from '@/views/PlaceholderView';
+import { PlanungView } from '@/views/PlanungView';
+import { SzenarienView } from '@/views/SzenarienView';
 
 // ── Tab Router ────────────────────────────────────────────────
 
