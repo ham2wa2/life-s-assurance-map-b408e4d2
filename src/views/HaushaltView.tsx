@@ -125,33 +125,43 @@ function PersonCard({ person, onSave, onDelete }: PersonCardProps) {
     );
   }
 
+  const avatarColors = {
+    hauptverdiener: 'bg-primary text-primary-foreground',
+    partner:        'bg-emerald-500 text-white',
+    kind:           'bg-slate-300 text-slate-700',
+  };
+  const avatarBg = avatarColors[person.role] ?? avatarColors.kind;
+  const initial  = (person.name || '?').charAt(0).toUpperCase();
+
   return (
     <div
-      className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors cursor-pointer"
+      className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors cursor-pointer"
       onClick={() => setEditing(true)}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{roleLabel}</p>
-          <p className="text-lg font-semibold text-foreground">{person.name || '—'}</p>
-          <p className="text-sm text-muted-foreground">{person.birthYear} · {age} Jahre</p>
+      <div className="flex items-center gap-3">
+        {/* Colored initial avatar */}
+        <div className={`flex-none w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${avatarBg}`}>
+          {initial}
         </div>
-        <span className="text-xs text-muted-foreground border border-border rounded-md px-3 py-1.5">
-          ✏️ Bearbeiten
-        </span>
+
+        {/* Person info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-tight">{roleLabel}</p>
+          <p className="text-base font-semibold text-foreground leading-snug">{person.name || '—'}</p>
+          <p className="text-xs text-muted-foreground">{person.birthYear} · {age} Jahre{person.role !== 'kind' ? ` · Rente mit ${person.retirementAge}` : ''}</p>
+        </div>
+
+        {/* Income KPI + edit hint */}
+        <div className="flex-none text-right">
+          {person.role !== 'kind' && (
+            <>
+              <p className="text-sm font-bold text-foreground tabular-nums">{fmtEur(person.netIncomeMonthly)}</p>
+              <p className="text-[10px] text-muted-foreground">Netto/Mo</p>
+            </>
+          )}
+          <span className="mt-1 inline-block text-xs text-muted-foreground border border-border rounded-md px-2 py-0.5">✏️</span>
+        </div>
       </div>
-      {person.role !== 'kind' && (
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Netto/Monat</span>
-          <span className="text-sm font-semibold text-foreground">{fmtEur(person.netIncomeMonthly)}</span>
-        </div>
-      )}
-      {person.role !== 'kind' && (
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Rentenalter</span>
-          <span className="text-sm text-foreground">{person.retirementAge} Jahre</span>
-        </div>
-      )}
     </div>
   );
 }

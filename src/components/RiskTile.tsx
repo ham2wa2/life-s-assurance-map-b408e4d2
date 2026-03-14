@@ -26,33 +26,65 @@ const statusDotColors = {
   success: 'bg-success',
 };
 
+// Soft icon chip backgrounds per risk type
+const iconChipBg: Partial<Record<RiskType, string>> = {
+  tod:        'bg-amber-50',
+  bu:         'bg-emerald-50',
+  kranken:    'bg-sky-50',
+  haftpflicht:'bg-violet-50',
+  unfall:     'bg-orange-50',
+  sachwerte:  'bg-slate-100',
+  sonstige:   'bg-slate-100',
+};
+
+// Status badge pill styles
+const statusBadgeStyles = {
+  destructive: 'bg-red-100 text-red-700',
+  warning:     'bg-amber-100 text-amber-700',
+  success:     'bg-emerald-100 text-emerald-700',
+};
+
+const statusBadgeLabels = {
+  destructive: 'Lücke',
+  warning:     'Ausbaufähig',
+  success:     'Gut',
+};
+
 export function RiskTile({ riskType, onOpenTimeline, onEditContract }: RiskTileProps) {
   const { contracts, timeline, toggleContract } = useInsurance();
   const riskContracts = contracts.filter(c => c.riskType === riskType);
-  
+
   const isCalculable = riskType === 'tod' || riskType === 'bu';
   const status = isCalculable ? getOverallStatus(riskType, timeline) : null;
+  const chipBg = iconChipBg[riskType] ?? 'bg-slate-100';
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:shadow-lg hover:shadow-primary/5">
+    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:shadow-lg hover:shadow-primary/5">
       {/* Status indicator bar */}
       {status && (
-        <div className={`absolute top-0 left-0 right-0 h-1 ${statusDotColors[status.color]}`} />
+        <div className={`absolute top-0 left-0 right-0 h-[3px] ${statusDotColors[status.color]}`} />
       )}
-      
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{RISK_ICONS[riskType]}</span>
-          <h3 className="font-semibold text-lg text-card-foreground">{RISK_LABELS[riskType]}</h3>
+
+      {/* Header: icon chip + name + status badge */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          {/* Icon in soft chip */}
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xl ${chipBg}`}>
+            {RISK_ICONS[riskType]}
+          </div>
+          <h3 className="font-semibold text-base text-card-foreground">{RISK_LABELS[riskType]}</h3>
         </div>
+        {/* Status pill badge */}
+        {status && (
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusBadgeStyles[status.color]}`}>
+            {statusBadgeLabels[status.color]}
+          </span>
+        )}
       </div>
 
-      {/* Status badge */}
+      {/* Status detail text */}
       {status && (
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-2.5 h-2.5 rounded-full ${statusDotColors[status.color]} animate-pulse`} />
-          <span className="text-sm text-muted-foreground">{status.label}</span>
-        </div>
+        <p className="text-xs text-muted-foreground mb-3">{status.label}</p>
       )}
 
       {/* Mini timeline bar */}

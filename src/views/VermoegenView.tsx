@@ -174,11 +174,14 @@ function AssetRow({ asset, onSave, onDelete }: AssetRowProps) {
           <p className="text-xs text-muted-foreground">{kat.label} · {fmtPct(asset.renditeProzent)} p.a.</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold tabular-nums text-foreground">
-          {fmtEur(asset.wertAktuell)}
-        </span>
-        <span className="opacity-0 group-hover:opacity-100 text-xs text-muted-foreground transition-opacity">✏️</span>
+      <div className="flex-none text-right">
+        <p className="text-sm font-semibold tabular-nums text-foreground">{fmtEur(asset.wertAktuell)}</p>
+        {asset.renditeProzent > 0 && (
+          <p className="text-xs text-emerald-600 tabular-nums">
+            ↑ {fmtEur(Math.round(asset.wertAktuell * asset.renditeProzent / 100))}/Jahr
+          </p>
+        )}
+        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground transition-opacity">✏️</span>
       </div>
     </div>
   );
