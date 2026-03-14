@@ -63,7 +63,7 @@ function KpiCard({ label, value, sub, color = 'text-foreground' }: {
   label: string; value: string; sub?: string; color?: string;
 }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="glass-card rounded-xl p-4">
       <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       <p className={`text-xl font-bold font-mono ${color}`}>{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
@@ -101,7 +101,7 @@ export function PlanungView() {
   );
 
   const finalNetWorth = lastYear?.netWorth ?? 0;
-  const netWorthColor = finalNetWorth >= 0 ? 'text-emerald-600' : 'text-destructive';
+  const netWorthColor = finalNetWorth >= 0 ? 'text-success' : 'text-danger';
 
   // ── Chart data (every year) ───────────────────────────────────
   const chartData = projection.map(y => ({
@@ -160,13 +160,13 @@ export function PlanungView() {
           label="Cashflow Erwerbsphase"
           value={fmtEurK(totalCashflowWorking)}
           sub="Kumuliert bis Rente"
-          color={totalCashflowWorking >= 0 ? 'text-emerald-600' : 'text-destructive'}
+          color={totalCashflowWorking >= 0 ? 'text-success' : 'text-danger'}
         />
         <KpiCard
           label={`Nettovermögen ${retirementYear}`}
           value={fmtEurK(retYear?.netWorth ?? 0)}
           sub="Renteneintritt"
-          color={(retYear?.netWorth ?? 0) >= 0 ? 'text-emerald-600' : 'text-destructive'}
+          color={(retYear?.netWorth ?? 0) >= 0 ? 'text-success' : 'text-danger'}
         />
         <KpiCard
           label={`Nettovermögen ${lastYear?.year ?? ''}`}
@@ -177,7 +177,7 @@ export function PlanungView() {
       </div>
 
       {/* ── Chart ── */}
-      <div className="bg-card border border-border rounded-xl p-4 md:p-6">
+      <div className="glass-card rounded-xl p-4 md:p-6">
         <p className="section-rule mb-4">
           Jahresverlauf (in k€)
           {activeScenario.overrides.inflationRate != null && (
@@ -210,7 +210,7 @@ export function PlanungView() {
             <Line
               type="monotone"
               dataKey="Einkommen"
-              stroke="#22c55e"
+              stroke="hsl(142 70% 45%)"
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4 }}
@@ -218,7 +218,7 @@ export function PlanungView() {
             <Line
               type="monotone"
               dataKey="Ausgaben"
-              stroke="#ef4444"
+              stroke="hsl(0 72% 51%)"
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4 }}
@@ -226,7 +226,7 @@ export function PlanungView() {
             <Line
               type="monotone"
               dataKey="Cashflow"
-              stroke="#3b82f6"
+              stroke="hsl(210 80% 55%)"
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4 }}
@@ -235,7 +235,7 @@ export function PlanungView() {
             <Line
               type="monotone"
               dataKey="Nettovermögen"
-              stroke="#a855f7"
+              stroke="hsl(38 92% 50%)"
               strokeWidth={2.5}
               dot={false}
               activeDot={{ r: 5 }}
@@ -309,13 +309,13 @@ export function PlanungView() {
                         {isRetirementRow && <span className="ml-1 text-primary text-[10px]">🏖️ Rente</span>}
                       </td>
                       <td className="px-2 py-2 text-center">{phaseLabel(row.lifePhase)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-emerald-600">{fmtEurK(row.income)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-destructive">{fmtEurK(row.expenses)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-muted-foreground">{fmtEurK(row.premiums)}</td>
-                      <td className={`px-3 py-2 text-right font-mono font-semibold ${row.netCashflow >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                      <td className="px-3 py-2 text-right font-mono text-success">{fmtEurK(row.income)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-danger">{fmtEurK(row.expenses)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-warning">{fmtEurK(row.premiums)}</td>
+                      <td className={`px-3 py-2 text-right font-mono font-semibold ${row.netCashflow >= 0 ? 'text-success' : 'text-danger'}`}>
                         {fmtEur(row.netCashflow)}
                       </td>
-                      <td className={`px-3 py-2 text-right font-mono font-bold ${row.netWorth >= 0 ? 'text-foreground' : 'text-destructive'}`}>
+                      <td className={`px-3 py-2 text-right font-mono font-bold ${row.netWorth >= 0 ? 'text-primary' : 'text-danger'}`}>
                         {fmtEurK(row.netWorth)}
                       </td>
                     </tr>

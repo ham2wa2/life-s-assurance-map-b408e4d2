@@ -143,16 +143,16 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen bg-background flex flex-col">
 
       {/* ── Unified Chrome: Header + Tabs in one navy block ── */}
-      <header className="bg-primary text-primary-foreground sticky top-0 z-20 shadow-md">
+      <header className="gradient-dark text-foreground sticky top-0 z-20 shadow-lg shadow-black/30">
 
         {/* Top row: Brand + Actions */}
         <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h1 className="text-sm font-bold tracking-tight leading-tight truncate">
+            <h1 className="text-sm font-bold tracking-tight leading-tight truncate text-foreground">
               Zeitachse Absicherung
             </h1>
             {subtitle && (
-              <p className="text-primary-foreground/55 text-xs leading-tight truncate">{subtitle}</p>
+              <p className="text-muted-foreground text-xs leading-tight truncate">{subtitle}</p>
             )}
           </div>
 
@@ -160,19 +160,19 @@ export function AppShell({ children }: AppShellProps) {
             <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors font-medium"
             >
               Import
             </button>
             <button
               onClick={handleExport}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors font-medium"
             >
               Export
             </button>
             <button
               onClick={handleReset}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-red-500/15 text-red-300 border border-red-500/25 hover:bg-red-500/25 transition-colors font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-md bg-danger/15 text-danger border border-danger/25 hover:bg-danger/25 transition-colors font-medium"
               title="Alle Daten löschen"
             >
               Löschen
@@ -180,9 +180,9 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </div>
 
-        {/* Tab row — separated by a hairline, same navy block */}
+        {/* Tab row — separated by a hairline */}
         <nav
-          className="flex overflow-x-auto px-2 sm:px-4 scrollbar-hide border-t border-white/[0.07]"
+          className="flex overflow-x-auto px-2 sm:px-4 scrollbar-hide border-t border-border/30"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {TABS.map((tab) => (
@@ -191,8 +191,8 @@ export function AppShell({ children }: AppShellProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`px-3 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors shrink-0 rounded-t-md ${
                 activeTab === tab.id
-                  ? 'border-blue-400 text-white bg-white/[0.08]'
-                  : 'border-transparent text-white/40 hover:text-white/75 hover:bg-white/[0.05]'
+                  ? 'border-primary text-foreground bg-white/[0.06]'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-white/[0.04]'
               }`}
             >
               {tab.label}

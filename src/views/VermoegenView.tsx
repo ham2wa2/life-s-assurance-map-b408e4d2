@@ -175,9 +175,9 @@ function AssetRow({ asset, onSave, onDelete }: AssetRowProps) {
         </div>
       </div>
       <div className="flex-none text-right">
-        <p className="text-sm font-semibold tabular-nums text-foreground">{fmtEur(asset.wertAktuell)}</p>
+        <p className="text-sm font-semibold font-mono tabular-nums text-foreground">{fmtEur(asset.wertAktuell)}</p>
         {asset.renditeProzent > 0 && (
-          <p className="text-xs text-emerald-600 tabular-nums">
+          <p className="text-xs text-success font-mono tabular-nums">
             ↑ {fmtEur(Math.round(asset.wertAktuell * asset.renditeProzent / 100))}/Jahr
           </p>
         )}
@@ -425,7 +425,7 @@ function LiabilityRow({ liability, onSave, onDelete }: LiabilityRowProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold tabular-nums text-destructive">
+        <span className="text-sm font-semibold font-mono tabular-nums text-danger">
           – {fmtEur(liability.betrag)}
         </span>
         <span className="opacity-0 group-hover:opacity-100 text-xs text-muted-foreground transition-opacity">✏️</span>
@@ -566,7 +566,7 @@ export function VermoegenView() {
   const totalAssets      = assets.reduce((s, a) => s + a.wertAktuell, 0);
   const totalLiabilities = liabilities.reduce((s, l) => s + l.betrag, 0);
   const totalMonthlyRate = liabilities.reduce((s, l) => s + l.monatlicheRate, 0);
-  const netWorthColor    = netWorth >= 0 ? 'text-emerald-600' : 'text-destructive';
+  const netWorthColor    = netWorth >= 0 ? 'text-success' : 'text-danger';
 
   const subtitle = [
     assets.length > 0 ? `${assets.length} Aktiva` : '',
@@ -587,24 +587,24 @@ export function VermoegenView() {
       {/* ── Nettovermögen Summary ── */}
       <section>
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
+          <div className="glass-card rounded-xl p-4 text-center">
             <p className="text-xs text-muted-foreground mb-1">Gesamtvermögen</p>
-            <p className="text-lg font-bold text-foreground tabular-nums">{fmtEur(totalAssets, true)}</p>
+            <p className="text-lg font-bold text-foreground font-mono tabular-nums">{fmtEur(totalAssets, true)}</p>
           </div>
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
+          <div className="glass-card rounded-xl p-4 text-center">
             <p className="text-xs text-muted-foreground mb-1">Gesamtschulden</p>
-            <p className="text-lg font-bold text-destructive tabular-nums">– {fmtEur(totalLiabilities, true)}</p>
+            <p className="text-lg font-bold text-danger font-mono tabular-nums">– {fmtEur(totalLiabilities, true)}</p>
           </div>
-          <div className={`border rounded-xl p-4 text-center ${netWorth >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`border rounded-xl p-4 text-center ${netWorth >= 0 ? 'bg-success/10 border-success/30' : 'bg-danger/10 border-danger/30'}`}>
             <p className="text-xs text-muted-foreground mb-1">Nettovermögen</p>
-            <p className={`text-lg font-bold tabular-nums ${netWorthColor}`}>{fmtEur(netWorth, true)}</p>
+            <p className={`text-lg font-bold font-mono tabular-nums ${netWorthColor}`}>{fmtEur(netWorth, true)}</p>
           </div>
         </div>
 
         {totalLiabilities > 0 && (
           <div className="mt-3 flex items-center justify-between bg-muted/40 rounded-lg px-4 py-2.5">
             <span className="text-sm text-muted-foreground">Monatliche Schuldentilgung gesamt</span>
-            <span className="text-sm font-semibold tabular-nums">{fmtEur(totalMonthlyRate)}</span>
+            <span className="text-sm font-semibold font-mono tabular-nums">{fmtEur(totalMonthlyRate)}</span>
           </div>
         )}
       </section>

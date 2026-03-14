@@ -26,22 +26,22 @@ const statusDotColors = {
   success: 'bg-success',
 };
 
-// Soft icon chip backgrounds per risk type
+// Soft icon chip backgrounds per risk type (dark-theme compatible)
 const iconChipBg: Partial<Record<RiskType, string>> = {
-  tod:        'bg-amber-50',
-  bu:         'bg-emerald-50',
-  kranken:    'bg-sky-50',
-  haftpflicht:'bg-violet-50',
-  unfall:     'bg-orange-50',
-  sachwerte:  'bg-slate-100',
-  sonstige:   'bg-slate-100',
+  tod:        'bg-warning/15',
+  bu:         'bg-success/15',
+  kranken:    'bg-info/15',
+  haftpflicht:'bg-overinsured/15',
+  unfall:     'bg-warning/10',
+  sachwerte:  'bg-secondary',
+  sonstige:   'bg-secondary',
 };
 
-// Status badge pill styles
+// Status badge pill styles (dark-theme)
 const statusBadgeStyles = {
-  destructive: 'bg-red-100 text-red-700',
-  warning:     'bg-amber-100 text-amber-700',
-  success:     'bg-emerald-100 text-emerald-700',
+  destructive: 'bg-danger/15 text-danger',
+  warning:     'bg-warning/15 text-warning',
+  success:     'bg-success/15 text-success',
 };
 
 const statusBadgeLabels = {

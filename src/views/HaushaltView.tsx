@@ -127,8 +127,8 @@ function PersonCard({ person, onSave, onDelete }: PersonCardProps) {
 
   const avatarColors = {
     hauptverdiener: 'bg-primary text-primary-foreground',
-    partner:        'bg-emerald-500 text-white',
-    kind:           'bg-slate-300 text-slate-700',
+    partner:        'bg-success text-success-foreground',
+    kind:           'bg-secondary text-secondary-foreground',
   };
   const avatarBg = avatarColors[person.role] ?? avatarColors.kind;
   const initial  = (person.name || '?').charAt(0).toUpperCase();
@@ -155,7 +155,7 @@ function PersonCard({ person, onSave, onDelete }: PersonCardProps) {
         <div className="flex-none text-right">
           {person.role !== 'kind' && (
             <>
-              <p className="text-sm font-bold text-foreground tabular-nums">{fmtEur(person.netIncomeMonthly)}</p>
+              <p className="text-sm font-bold text-foreground font-mono tabular-nums">{fmtEur(person.netIncomeMonthly)}</p>
               <p className="text-[10px] text-muted-foreground">Netto/Mo</p>
             </>
           )}
@@ -299,7 +299,7 @@ function ExpenseRow({ label, value, onChange, step = 50 }: ExpenseRowProps) {
       ) : (
         <button
           onClick={() => { setRaw(String(value)); setEditing(true); }}
-          className="text-sm font-semibold text-foreground hover:text-primary transition-colors tabular-nums"
+          className="text-sm font-semibold text-foreground hover:text-primary transition-colors font-mono tabular-nums"
         >
           {fmtEur(value)}
         </button>
@@ -341,7 +341,7 @@ export function HaushaltView() {
     .reduce((s, c) => s + c.monthlyPremium, 0);
 
   const monthlySavings = totalIncome - totalExpenses - totalPremiums;
-  const savingsColor = monthlySavings > 0 ? 'text-emerald-600' : 'text-destructive';
+  const savingsColor = monthlySavings > 0 ? 'text-success' : 'text-danger';
 
   const adults = persons.filter((p) => p.role !== 'kind');
   const subtitleParts = [
@@ -495,19 +495,19 @@ export function HaushaltView() {
         <div className="bg-card border border-border rounded-xl px-5 py-1">
           <div className="flex items-center justify-between py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Gesamteinkommen</span>
-            <span className="text-sm font-semibold tabular-nums">{fmtEur(totalIncome)}</span>
+            <span className="text-sm font-semibold font-mono tabular-nums">{fmtEur(totalIncome)}</span>
           </div>
           <div className="flex items-center justify-between py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Fixausgaben</span>
-            <span className="text-sm font-semibold tabular-nums text-foreground">– {fmtEur(totalExpenses)}</span>
+            <span className="text-sm font-semibold font-mono tabular-nums text-foreground">– {fmtEur(totalExpenses)}</span>
           </div>
           <div className="flex items-center justify-between py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Versicherungsprämien</span>
-            <span className="text-sm font-semibold tabular-nums text-foreground">– {fmtEur(totalPremiums)}</span>
+            <span className="text-sm font-semibold font-mono tabular-nums text-foreground">– {fmtEur(totalPremiums)}</span>
           </div>
           <div className="flex items-center justify-between py-4">
             <span className="text-sm font-semibold text-foreground">Freie Liquidität</span>
-            <span className={`text-base font-bold tabular-nums ${savingsColor}`}>
+            <span className={`text-base font-bold font-mono tabular-nums ${savingsColor}`}>
               {monthlySavings >= 0 ? '' : '– '}{fmtEur(Math.abs(monthlySavings))}
             </span>
           </div>

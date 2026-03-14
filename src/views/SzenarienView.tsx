@@ -202,7 +202,7 @@ interface ScenarioCardProps {
 }
 
 function ScenarioCard({ scenario, isActive, metrics, onActivate, onEdit, onCopy, onDelete }: ScenarioCardProps) {
-  const nwColor = metrics.finalNetWorth >= 0 ? 'text-emerald-600' : 'text-destructive';
+  const nwColor = metrics.finalNetWorth >= 0 ? 'text-success' : 'text-danger';
   return (
     <div
       className={`bg-card border rounded-xl p-5 transition-all cursor-pointer ${
@@ -246,7 +246,7 @@ function ScenarioCard({ scenario, isActive, metrics, onActivate, onEdit, onCopy,
           {!scenario.isBaseline && (
             <button
               onClick={onDelete}
-              className="text-xs px-2 py-1 rounded-md bg-secondary text-destructive hover:bg-destructive/10 transition-colors"
+              className="text-xs px-2 py-1 rounded-md bg-secondary text-danger hover:bg-destructive/10 transition-colors"
               title="Löschen"
             >
               ✕
@@ -281,7 +281,7 @@ function ScenarioCard({ scenario, isActive, metrics, onActivate, onEdit, onCopy,
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="bg-muted/30 rounded-lg p-2">
           <p className="text-muted-foreground">Nettovermögen Rente</p>
-          <p className={`font-bold font-mono mt-0.5 ${metrics.retirementNetWorth >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+          <p className={`font-bold font-mono mt-0.5 ${metrics.retirementNetWorth >= 0 ? 'text-success' : 'text-danger'}`}>
             {fmtEurK(metrics.retirementNetWorth)}
           </p>
           <p className="text-muted-foreground/70">{metrics.retirementYear}</p>
@@ -449,10 +449,10 @@ export function SzenarienView() {
                         {isActive && <span className="ml-1.5 text-[10px] text-primary font-semibold">● aktiv</span>}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono">{m?.retirementYear ?? '—'}</td>
-                      <td className={`px-4 py-2.5 text-right font-mono font-semibold ${(m?.retirementNetWorth ?? 0) >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                      <td className={`px-4 py-2.5 text-right font-mono font-semibold ${(m?.retirementNetWorth ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                         {m ? fmtEurK(m.retirementNetWorth) : '—'}
                       </td>
-                      <td className={`px-4 py-2.5 text-right font-mono font-semibold ${(m?.finalNetWorth ?? 0) >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                      <td className={`px-4 py-2.5 text-right font-mono font-semibold ${(m?.finalNetWorth ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                         {m ? fmtEurK(m.finalNetWorth) : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono text-muted-foreground">

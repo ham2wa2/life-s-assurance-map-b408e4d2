@@ -1,4 +1,8 @@
-/* Font loaded via index.html preconnect for better performance */
+/**
+ * DARK FINANCE DASHBOARD — Style Guide Implementation
+ * Fonts: Inter (UI) + JetBrains Mono (Zahlen)
+ * Accent: Solar Amber (38° 92% 50%)
+ */
 
 @tailwind base;
 @tailwind components;
@@ -6,86 +10,69 @@
 
 @layer base {
   :root {
-    --background: 45 20% 96%;
-    --foreground: 220 30% 12%;
+    /* Backgrounds */
+    --background: 220 20% 8%;
+    --foreground: 210 20% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
+    --card: 220 18% 11%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
+    --popover: 220 18% 11%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 220 60% 20%;
-    --primary-foreground: 210 40% 98%;
+    /* Brand — Solar Amber */
+    --primary: 38 92% 50%;
+    --primary-foreground: 220 20% 8%;
 
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 30% 20%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 215 15% 55%;
 
-    --accent: 42 100% 50%;
-    --accent-foreground: 220 60% 12%;
+    --accent: 38 80% 45%;
+    --accent-foreground: 220 20% 8%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 40%;
-    --success-foreground: 0 0% 100%;
+    /* Semantic status (Traffic Light) */
+    --success: 142 70% 45%;
+    --success-foreground: 142 70% 95%;
 
-    --warning: 42 100% 50%;
-    --warning-foreground: 220 60% 12%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 10%;
+
+    --danger: 0 72% 51%;
+    --danger-foreground: 0 72% 95%;
 
     --overinsured: 270 50% 55%;
     --overinsured-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 60% 20%;
+    --info: 210 80% 55%;
+    --info-foreground: 210 80% 95%;
 
-    --radius: 0.75rem;
+    /* Structure */
+    --border: 220 15% 20%;
+    --input: 220 15% 15%;
+    --ring: 38 92% 50%;
+    --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Charts */
+    --chart-positive: 142 70% 45%;
+    --chart-negative: 0 72% 51%;
+    --chart-neutral: 215 15% 55%;
+    --chart-primary: 38 92% 50%;
 
-    --font-display: 'Manrope', sans-serif;
-    --font-mono: 'Manrope', monospace;
-  }
-
-  .dark {
-    --background: 220 25% 8%;
-    --foreground: 210 40% 95%;
-    --card: 220 25% 12%;
-    --card-foreground: 210 40% 95%;
-    --popover: 220 25% 12%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 210 50% 60%;
-    --primary-foreground: 220 25% 8%;
-    --secondary: 220 20% 18%;
-    --secondary-foreground: 210 40% 90%;
-    --muted: 220 20% 18%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 42 100% 50%;
-    --accent-foreground: 220 60% 12%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 210 50% 60%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 220 18% 9%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 220 20% 8%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 38 92% 50%;
   }
 }
 
@@ -95,17 +82,74 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: var(--font-display);
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Number-input spinner visibility on dark bg */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    filter: invert(0.7);
+  }
+}
+
+@layer components {
+  /* Glass Card (Dashboard) */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg;
+  }
+
+  /* Status Glow effects */
+  .glow-success {
+    box-shadow: 0 0 20px hsl(var(--success) / 0.3);
+  }
+  .glow-warning {
+    box-shadow: 0 0 20px hsl(var(--warning) / 0.3);
+  }
+  .glow-danger {
+    box-shadow: 0 0 20px hsl(var(--danger) / 0.3);
+  }
+
+  /* Solar Gradient (Buttons, Badges) */
+  .gradient-solar {
+    background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(25 95% 53%) 100%);
+  }
+
+  /* Dark Gradient (Hintergründe) */
+  .gradient-dark {
+    background: linear-gradient(180deg, hsl(220 18% 11%) 0%, hsl(220 20% 6%) 100%);
+  }
+
+  /* Text Gradient (Hervorhebungen) */
+  .text-gradient-solar {
+    background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(25 95% 53%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Section Header with left accent border */
+  .section-header {
+    @apply border-l-2 border-primary/50 pl-3 py-1;
+  }
+
+  /* Summary Box (inline computed values in forms) */
+  .summary-box {
+    @apply rounded-lg border p-4 border-primary/30 bg-primary/5;
   }
 }
 
 @layer utilities {
   .font-mono {
-    font-family: var(--font-mono);
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Section eyebrow label with trailing rule line — used across all views */
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Section eyebrow label with trailing rule line */
   .section-rule {
     display: flex;
     align-items: center;
@@ -125,7 +169,7 @@
 }
 
 @media print {
-  .print\\:hidden, .print\:hidden {
+  .print\:hidden {
     display: none !important;
   }
   body {

@@ -21,10 +21,10 @@ function pct(val: number) {
 
 // ── HealthScore Card ─────────────────────────────────────────
 
-const STATUS_COLOR: Record<StatusLevel, { bg: string; text: string; dot: string; label: string }> = {
-  good:     { bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Gut' },
-  warning:  { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   dot: 'bg-amber-400',   label: 'Ausbaufähig' },
-  critical: { bg: 'bg-red-50 border-red-200',         text: 'text-red-700',     dot: 'bg-red-500',     label: 'Handlungsbedarf' },
+const STATUS_COLOR: Record<StatusLevel, { bg: string; text: string; dot: string; glow: string; label: string }> = {
+  good:     { bg: 'bg-success/10 border-success/30', text: 'text-success', dot: 'bg-success', glow: 'glow-success', label: 'Gut' },
+  warning:  { bg: 'bg-warning/10 border-warning/30', text: 'text-warning', dot: 'bg-warning', glow: 'glow-warning', label: 'Ausbaufähig' },
+  critical: { bg: 'bg-danger/10 border-danger/30',   text: 'text-danger',  dot: 'bg-danger',  glow: 'glow-danger',  label: 'Handlungsbedarf' },
 };
 
 interface ScoreCardProps {
@@ -39,7 +39,7 @@ function ScoreCard({ title, status, detail, onClick }: ScoreCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`text-left w-full border rounded-xl p-4 transition-all ${s.bg} ${onClick ? 'hover:scale-[1.01] cursor-pointer' : 'cursor-default'}`}
+      className={`text-left w-full glass-card rounded-xl p-4 transition-all ${s.glow} ${onClick ? 'hover:scale-[1.01] cursor-pointer' : 'cursor-default'}`}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-foreground leading-tight">{title}</p>
@@ -65,18 +65,17 @@ interface MetricTileProps {
 function MetricTile({ label, value, sub, accent }: MetricTileProps) {
   if (accent) {
     return (
-      <div className="rounded-xl p-5 border border-primary/30"
-           style={{ background: 'linear-gradient(135deg, #1a2744 0%, #253357 100%)' }}>
-        <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</p>
-        <p className="text-2xl font-bold tabular-nums text-white">{value}</p>
-        {sub && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{sub}</p>}
+      <div className="rounded-xl p-5 border border-primary/30 gradient-solar">
+        <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-1.5 text-primary-foreground/60">{label}</p>
+        <p className="text-2xl font-bold font-mono tabular-nums text-primary-foreground">{value}</p>
+        {sub && <p className="text-xs mt-0.5 text-primary-foreground/50">{sub}</p>}
       </div>
     );
   }
   return (
-    <div className="bg-card border border-border rounded-xl p-5">
+    <div className="glass-card rounded-xl p-5">
       <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1.5">{label}</p>
-      <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+      <p className="text-2xl font-bold font-mono tabular-nums text-foreground">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
@@ -121,7 +120,7 @@ export function DashboardView() {
       </div>
 
       {/* ── Overall score ── */}
-      <div className={`rounded-2xl p-5 border ${STATUS_COLOR[hs.overall].bg}`}>
+      <div className={`rounded-2xl p-5 border ${STATUS_COLOR[hs.overall].bg} ${STATUS_COLOR[hs.overall].glow}`}>
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${STATUS_COLOR[hs.overall].dot}`} />
           <div>
@@ -226,7 +225,7 @@ export function DashboardView() {
       {contracts.length > 0 && (
         <section>
           <h3 className="section-rule mb-3">Versicherungsübersicht</h3>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="glass-card rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -247,7 +246,7 @@ export function DashboardView() {
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                       <span className="capitalize">{c.riskType}</span>
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                    <td className="px-4 py-3 text-right font-semibold font-mono tabular-nums">
                       {fmtEur(c.monthlyPremium)}
                     </td>
                     <td className="px-4 py-3 text-right text-muted-foreground hidden sm:table-cell">
@@ -256,9 +255,9 @@ export function DashboardView() {
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-block w-2 h-2 rounded-full ${
                         !c.active ? 'bg-muted-foreground' :
-                        c.endYear < currentYear ? 'bg-red-500' :
-                        c.endYear <= currentYear + 3 ? 'bg-amber-400' :
-                        'bg-emerald-500'
+                        c.endYear < currentYear ? 'bg-danger' :
+                        c.endYear <= currentYear + 3 ? 'bg-warning' :
+                        'bg-success'
                       }`} />
                     </td>
                   </tr>
@@ -267,7 +266,7 @@ export function DashboardView() {
               <tfoot>
                 <tr className="bg-muted/20">
                   <td className="px-4 py-3 text-sm font-semibold text-foreground" colSpan={2}>Gesamt</td>
-                  <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">
+                  <td className="px-4 py-3 text-right font-bold font-mono tabular-nums text-foreground">
                     {fmtEur(contracts.filter((c) => c.active).reduce((s, c) => s + c.monthlyPremium, 0))}
                   </td>
                   <td colSpan={2} />
