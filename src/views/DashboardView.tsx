@@ -63,10 +63,20 @@ interface MetricTileProps {
 }
 
 function MetricTile({ label, value, sub, accent }: MetricTileProps) {
+  if (accent) {
+    return (
+      <div className="rounded-xl p-5 border border-primary/30"
+           style={{ background: 'linear-gradient(135deg, #1a2744 0%, #253357 100%)' }}>
+        <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</p>
+        <p className="text-2xl font-bold tabular-nums text-white">{value}</p>
+        {sub && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{sub}</p>}
+      </div>
+    );
+  }
   return (
-    <div className={`bg-card border border-border rounded-xl p-5 ${accent ? 'border-primary/30' : ''}`}>
-      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums ${accent ? 'text-primary' : 'text-foreground'}`}>{value}</p>
+    <div className="bg-card border border-border rounded-xl p-5">
+      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1.5">{label}</p>
+      <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
@@ -131,7 +141,7 @@ export function DashboardView() {
 
       {/* ── Key Metrics ── */}
       <section>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Kennzahlen</h3>
+        <h3 className="section-rule mb-3">Kennzahlen</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricTile
             label="Einkommen/Monat"
@@ -159,7 +169,7 @@ export function DashboardView() {
 
       {/* ── HealthScore Cards ── */}
       <section>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Finanzielle Gesundheit</h3>
+        <h3 className="section-rule mb-3">Finanzielle Gesundheit</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ScoreCard
             title="Absicherung"
@@ -215,7 +225,7 @@ export function DashboardView() {
       {/* ── Contracts overview ── */}
       {contracts.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Versicherungsübersicht</h3>
+          <h3 className="section-rule mb-3">Versicherungsübersicht</h3>
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>

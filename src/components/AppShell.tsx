@@ -172,7 +172,7 @@ export function AppShell({ children }: AppShellProps) {
             </button>
             <button
               onClick={handleReset}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-red-500/80 hover:bg-red-500 transition-colors font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-md bg-red-500/15 text-red-300 border border-red-500/25 hover:bg-red-500/25 transition-colors font-medium"
               title="Alle Daten löschen"
             >
               Löschen
@@ -180,19 +180,19 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </div>
 
-        {/* Tab row: scrollable, no overflow indicator, inside same navy bar */}
+        {/* Tab row — separated by a hairline, same navy block */}
         <nav
-          className="flex overflow-x-auto px-2 sm:px-4 scrollbar-hide"
+          className="flex overflow-x-auto px-2 sm:px-4 scrollbar-hide border-t border-white/[0.07]"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors shrink-0 ${
+              className={`px-3 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors shrink-0 rounded-t-md ${
                 activeTab === tab.id
-                  ? 'border-white text-white'
-                  : 'border-transparent text-primary-foreground/60 hover:text-primary-foreground/90'
+                  ? 'border-blue-400 text-white bg-white/[0.08]'
+                  : 'border-transparent text-white/40 hover:text-white/75 hover:bg-white/[0.05]'
               }`}
             >
               {tab.label}

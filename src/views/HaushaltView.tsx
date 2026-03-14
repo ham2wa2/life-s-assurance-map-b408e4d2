@@ -339,7 +339,7 @@ export function HaushaltView() {
       {/* ── Personen ── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Personen</h2>
+          <h2 className="section-rule">Personen</h2>
         </div>
 
         <div className="space-y-3">
@@ -415,7 +415,7 @@ export function HaushaltView() {
 
       {/* ── Ausgaben ── */}
       <section>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Monatliche Ausgaben</h2>
+        <h2 className="section-rule mb-4">Monatliche Ausgaben</h2>
         <div className="bg-card border border-border rounded-xl px-5">
           <ExpenseRow
             label="Wohnkosten (Miete / NK)"
@@ -437,7 +437,7 @@ export function HaushaltView() {
 
       {/* ── Kredit & Bildung ── */}
       <section>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Kredit & Bildung</h2>
+        <h2 className="section-rule mb-4">Kredit & Bildung</h2>
         <div className="bg-card border border-border rounded-xl px-5">
           <ExpenseRow
             label="Kreditbetrag (€)"
@@ -467,7 +467,7 @@ export function HaushaltView() {
 
       {/* ── Monatliche Bilanz ── */}
       <section>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Monatliche Bilanz</h2>
+        <h2 className="section-rule mb-4">Monatliche Bilanz</h2>
         <div className="bg-card border border-border rounded-xl px-5 py-1">
           <div className="flex items-center justify-between py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Gesamteinkommen</span>

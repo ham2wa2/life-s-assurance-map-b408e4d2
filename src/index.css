@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
+    --background: 45 20% 96%;
     --foreground: 220 30% 12%;
 
     --card: 0 0% 100%;
@@ -103,6 +103,24 @@
 @layer utilities {
   .font-mono {
     font-family: var(--font-mono);
+  }
+
+  /* Section eyebrow label with trailing rule line — used across all views */
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .section-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--border));
   }
 }
 

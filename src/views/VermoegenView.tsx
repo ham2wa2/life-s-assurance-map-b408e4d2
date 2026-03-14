@@ -597,7 +597,7 @@ export function VermoegenView() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Aktiva</h2>
+            <h2 className="section-rule">Aktiva</h2>
             {assets.length > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">{assets.length} Position{assets.length !== 1 ? 'en' : ''}</p>
             )}
@@ -646,7 +646,7 @@ export function VermoegenView() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Passiva / Verbindlichkeiten</h2>
+            <h2 className="section-rule">Passiva / Verbindlichkeiten</h2>
             {liabilities.length > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">{liabilities.length} Position{liabilities.length !== 1 ? 'en' : ''}</p>
             )}
