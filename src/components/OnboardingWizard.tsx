@@ -254,50 +254,96 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   if (mode === 'welcome') {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Same navy chrome as AppShell */}
-        <header className="bg-primary text-primary-foreground px-4 sm:px-6 py-4 shadow-md">
-          <h1 className="text-base font-bold tracking-tight">Zeitachse Absicherung</h1>
-          <p className="text-primary-foreground/60 text-xs mt-0.5">
-            Absicherung · Vermögen · Vorsorge
-          </p>
-        </header>
+      <div
+        className="min-h-screen flex items-center justify-center p-6 text-center relative overflow-hidden"
+        style={{ background: 'linear-gradient(160deg, #1a2744 0%, #0f1829 50%, #1a2744 100%)' }}
+      >
+        {/* Radial glow — top left */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: -100, left: -100,
+            width: 400, height: 400,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 70%)',
+          }}
+        />
+        {/* Radial glow — bottom right */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            bottom: -80, right: -80,
+            width: 300, height: 300,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 70%)',
+          }}
+        />
 
-        {/* Hero strip — still navy, tagline */}
-        <div className="bg-primary/95 text-primary-foreground px-4 sm:px-6 py-10 text-center">
-          <p className="text-primary-foreground/80 text-sm max-w-xs mx-auto leading-relaxed">
-            Dein persönlicher Finanzplan — Schritt für Schritt aufgebaut,
-            komplett lokal auf deinem Gerät.
-          </p>
-        </div>
+        <div className="relative z-10 w-full max-w-sm">
 
-        {/* Action card — floats out of the navy area */}
-        <div className="flex-1 flex flex-col items-center px-4 pt-0 pb-10">
-          <div className="w-full max-w-sm -mt-5 bg-card rounded-2xl shadow-lg border border-border p-5 space-y-3">
-            <button
-              onClick={() => setMode('wizard')}
-              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Neu starten
-            </button>
-            <button
-              onClick={() => importFileRef.current?.click()}
-              className="w-full py-3.5 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
-            >
-              Daten importieren
-            </button>
-            <input
-              ref={importFileRef}
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImportFile}
-            />
-
-            <p className="text-xs text-muted-foreground text-center pt-1">
-              Alle Daten bleiben lokal auf deinem Gerät gespeichert.
-            </p>
+          {/* App icon */}
+          <div
+            className="mx-auto mb-7 flex items-center justify-center text-3xl"
+            style={{
+              width: 64, height: 64,
+              borderRadius: 16,
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            🛡️
           </div>
+
+          {/* Title */}
+          <h1
+            className="font-bold text-white mb-3"
+            style={{ fontSize: 36, lineHeight: 1.15 }}
+          >
+            Dein Finanzplan auf einen Blick
+          </h1>
+
+          {/* Tagline */}
+          <p
+            className="text-sm mb-9 mx-auto max-w-xs leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.45)' }}
+          >
+            Absicherung · Vermögen · Vorsorge —<br />alles lokal, alles privat.
+          </p>
+
+          {/* Primary CTA */}
+          <button
+            onClick={() => setMode('wizard')}
+            className="block w-full max-w-xs mx-auto mb-2.5 py-3.5 rounded-xl text-sm font-semibold tracking-wide hover:opacity-90 transition-opacity"
+            style={{ background: 'white', color: '#1a2744' }}
+          >
+            Neu starten →
+          </button>
+
+          {/* Secondary CTA */}
+          <button
+            onClick={() => importFileRef.current?.click()}
+            className="block w-full max-w-xs mx-auto py-3.5 rounded-xl text-sm font-medium transition-colors hover:brightness-110"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              color: 'rgba(255,255,255,0.6)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            Daten importieren
+          </button>
+
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+
+          {/* Privacy note */}
+          <p className="mt-6 text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            🔒 Alle Daten bleiben lokal auf deinem Gerät
+          </p>
         </div>
       </div>
     );
