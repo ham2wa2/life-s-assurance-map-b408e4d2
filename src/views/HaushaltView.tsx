@@ -333,8 +333,22 @@ export function HaushaltView() {
   const monthlySavings = totalIncome - totalExpenses - totalPremiums;
   const savingsColor = monthlySavings > 0 ? 'text-emerald-600' : 'text-destructive';
 
+  const adults = persons.filter((p) => p.role !== 'kind');
+  const subtitleParts = [
+    adults.map((p) => p.name).filter(Boolean).join(' & '),
+    kinder.length > 0 ? `${kinder.length} ${kinder.length === 1 ? 'Kind' : 'Kinder'}` : '',
+  ].filter(Boolean).join(' · ');
+
   return (
     <div className="space-y-8">
+
+      {/* ── Page title ── */}
+      <div>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Haushalt</h2>
+        {subtitleParts && (
+          <p className="text-muted-foreground text-sm mt-1">{subtitleParts}</p>
+        )}
+      </div>
 
       {/* ── Personen ── */}
       <section>

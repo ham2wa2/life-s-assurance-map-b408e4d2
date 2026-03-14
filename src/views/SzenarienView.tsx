@@ -355,7 +355,7 @@ export function SzenarienView() {
           {scenarios.length > 1 && (
             <button
               onClick={() => setShowCompare(v => !v)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`text-sm px-3 py-2 rounded-lg font-medium transition-all ${
                 showCompare
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -367,7 +367,7 @@ export function SzenarienView() {
           {!showCreate && (
             <button
               onClick={() => { setEditingId(null); setShowCreate(true); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
+              className="text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
             >
               + Neues Szenario
             </button>
@@ -419,9 +419,7 @@ export function SzenarienView() {
       {/* ── Comparison table ── */}
       {showCompare && scenarios.length > 1 && (
         <div className="mt-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">
-            Szenarien-Vergleich
-          </p>
+          <p className="section-rule mb-3">Szenarien-Vergleich</p>
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-xs">
               <thead>

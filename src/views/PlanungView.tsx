@@ -136,7 +136,7 @@ export function PlanungView() {
               <button
                 key={s.id}
                 onClick={() => setActiveScenario(s.id)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                className={`text-sm px-3 py-2 rounded-lg font-medium transition-all ${
                   activeScenario.id === s.id
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -178,10 +178,10 @@ export function PlanungView() {
 
       {/* ── Chart ── */}
       <div className="bg-card border border-border rounded-xl p-4 md:p-6">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
+        <p className="section-rule mb-4">
           Jahresverlauf (in k€)
           {activeScenario.overrides.inflationRate != null && (
-            <span className="ml-2 text-primary">
+            <span className="ml-2 text-primary font-medium normal-case tracking-normal">
               · Inflation {activeScenario.overrides.inflationRate} %
             </span>
           )}

@@ -565,8 +565,21 @@ export function VermoegenView() {
   const totalMonthlyRate = liabilities.reduce((s, l) => s + l.monatlicheRate, 0);
   const netWorthColor    = netWorth >= 0 ? 'text-emerald-600' : 'text-destructive';
 
+  const subtitle = [
+    assets.length > 0 ? `${assets.length} Aktiva` : '',
+    liabilities.length > 0 ? `${liabilities.length} ${liabilities.length === 1 ? 'Verbindlichkeit' : 'Verbindlichkeiten'}` : '',
+  ].filter(Boolean).join(' · ');
+
   return (
     <div className="space-y-8">
+
+      {/* ── Page title ── */}
+      <div>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Vermögen</h2>
+        {subtitle && (
+          <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
+        )}
+      </div>
 
       {/* ── Nettovermögen Summary ── */}
       <section>
