@@ -254,29 +254,37 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   if (mode === 'welcome') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-3">
-              Zeitachse Absicherung
-            </h1>
-            <p className="text-muted-foreground">
-              Dein persönlicher Finanzplan — Absicherung, Vermögen, Vorsorge
-            </p>
-          </div>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Same navy chrome as AppShell */}
+        <header className="bg-primary text-primary-foreground px-4 sm:px-6 py-4 shadow-md">
+          <h1 className="text-base font-bold tracking-tight">Zeitachse Absicherung</h1>
+          <p className="text-primary-foreground/60 text-xs mt-0.5">
+            Absicherung · Vermögen · Vorsorge
+          </p>
+        </header>
 
-          <div className="space-y-3">
+        {/* Hero strip — still navy, tagline */}
+        <div className="bg-primary/95 text-primary-foreground px-4 sm:px-6 py-10 text-center">
+          <p className="text-primary-foreground/80 text-sm max-w-xs mx-auto leading-relaxed">
+            Dein persönlicher Finanzplan — Schritt für Schritt aufgebaut,
+            komplett lokal auf deinem Gerät.
+          </p>
+        </div>
+
+        {/* Action card — floats out of the navy area */}
+        <div className="flex-1 flex flex-col items-center px-4 pt-0 pb-10">
+          <div className="w-full max-w-sm -mt-5 bg-card rounded-2xl shadow-lg border border-border p-5 space-y-3">
             <button
               onClick={() => setMode('wizard')}
-              className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:opacity-90 transition-opacity"
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              🆕 Neu starten
+              Neu starten
             </button>
             <button
               onClick={() => importFileRef.current?.click()}
-              className="w-full py-4 rounded-xl border-2 border-border text-foreground text-base font-semibold hover:bg-muted transition-colors"
+              className="w-full py-3.5 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
             >
-              📂 Daten importieren
+              Daten importieren
             </button>
             <input
               ref={importFileRef}
@@ -285,11 +293,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               className="hidden"
               onChange={handleImportFile}
             />
-          </div>
 
-          <p className="text-xs text-muted-foreground">
-            Alle Daten bleiben lokal auf deinem Gerät gespeichert.
-          </p>
+            <p className="text-xs text-muted-foreground text-center pt-1">
+              Alle Daten bleiben lokal auf deinem Gerät gespeichert.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -298,18 +306,26 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   // ── Render: Wizard ────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
-            Zeitachse Absicherung
-          </h1>
-          <p className="text-muted-foreground">Richte deinen persönlichen Finanzplan ein</p>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Same navy chrome as Welcome + AppShell */}
+      <header className="bg-primary text-primary-foreground sticky top-0 z-20 shadow-md px-4 sm:px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-sm font-bold tracking-tight">Zeitachse Absicherung</h1>
+            <p className="text-primary-foreground/60 text-xs">Setup · Schritt {step + 1} / {STEPS.length}</p>
+          </div>
+          <button
+            onClick={() => step === 0 ? setMode('welcome') : setStep(step - 1)}
+            className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
+          >
+            ← Zurück
+          </button>
         </div>
+      </header>
 
+      <div className="flex-1 px-4 sm:px-6 py-6 w-full max-w-xl mx-auto">
         {/* Progress */}
-        <div className="flex items-center gap-1 mb-8">
+        <div className="flex items-center gap-1 mb-6">
           {STEPS.map((s, i) => (
             <div key={s} className="flex-1">
               <div className={`h-1.5 rounded-full transition-all ${i <= step ? 'bg-primary' : 'bg-muted'}`} />
@@ -321,7 +337,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         </div>
 
         {/* Card */}
-        <div className="bg-card rounded-xl border border-border p-6 md:p-8">
+        <div className="bg-card rounded-xl border border-border p-5 sm:p-7">
 
           {/* ── Step 0: Haushalt ── */}
           {step === 0 && (

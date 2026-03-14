@@ -1,6 +1,8 @@
 /**
- * AppShell — Tab navigation wrapper (Sprint 2)
- * Fixed header + sticky tab bar + content area
+ * AppShell — Tab navigation wrapper
+ *
+ * Design: One unified navy chrome bar (header + tabs merged).
+ * Mobile-first: tab row scrolls horizontally on small screens.
  */
 
 import { useRef } from 'react';
@@ -139,57 +141,68 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* ── Header ── */}
-      <header className="bg-primary text-primary-foreground px-6 py-3 flex items-center justify-between sticky top-0 z-20 shadow-md">
-        <div>
-          <h1 className="text-base font-bold tracking-tight leading-tight">Zeitachse Absicherung</h1>
-          {subtitle && (
-            <p className="text-primary-foreground/60 text-xs leading-tight">{subtitle}</p>
-          )}
+
+      {/* ── Unified Chrome: Header + Tabs in one navy block ── */}
+      <header className="bg-primary text-primary-foreground sticky top-0 z-20 shadow-md">
+
+        {/* Top row: Brand + Actions */}
+        <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold tracking-tight leading-tight truncate">
+              Zeitachse Absicherung
+            </h1>
+            {subtitle && (
+              <p className="text-primary-foreground/55 text-xs leading-tight truncate">{subtitle}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
+            >
+              Import
+            </button>
+            <button
+              onClick={handleExport}
+              className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
+            >
+              Export
+            </button>
+            <button
+              onClick={handleReset}
+              className="text-xs px-2.5 py-1.5 rounded-md bg-red-500/80 hover:bg-red-500 transition-colors font-medium"
+              title="Alle Daten löschen"
+            >
+              Löschen
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
-          >
-            Import
-          </button>
-          <button
-            onClick={handleExport}
-            className="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
-          >
-            Export
-          </button>
-          <button
-            onClick={handleReset}
-            className="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-red-500/60 transition-colors font-medium"
-            title="Alle Daten löschen"
-          >
-            🗑 Löschen
-          </button>
-        </div>
+
+        {/* Tab row: scrollable, no overflow indicator, inside same navy bar */}
+        <nav
+          className="flex overflow-x-auto px-2 sm:px-4 scrollbar-hide"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors shrink-0 ${
+                activeTab === tab.id
+                  ? 'border-white text-white'
+                  : 'border-transparent text-primary-foreground/60 hover:text-primary-foreground/90'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      {/* ── Tab Bar ── */}
-      <nav className="bg-card border-b border-border px-4 flex overflow-x-auto sticky top-[52px] z-10 scrollbar-hide">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors shrink-0 ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
       {/* ── Content ── */}
-      <main className="flex-1 p-6 md:p-8 w-full max-w-5xl mx-auto">
+      <main className="flex-1 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-8 w-full max-w-5xl mx-auto">
         {children}
       </main>
     </div>

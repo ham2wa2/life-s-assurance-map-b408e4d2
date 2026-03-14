@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Font loaded via index.html preconnect for better performance */
 
 @tailwind base;
 @tailwind components;
@@ -54,8 +54,8 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    --font-display: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Manrope', sans-serif;
+    --font-mono: 'Manrope', monospace;
   }
 
   .dark {
